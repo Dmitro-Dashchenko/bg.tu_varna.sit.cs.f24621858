@@ -1,40 +1,35 @@
 package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
 
-public class NetpbmFormatImage {
+import java.util.Objects;
+
+public class NetpbmFormatImage extends Image{
     private MagicWord magicWord;
 
-    private int width;
+    private short maxPixelValue;
 
-    private int height;
+    private PixelFormat pixelFormat;
 
-    private byte maxPixelValue;
+    public NetpbmFormatImage(String name, String magicWord, int width, int height, short maxPixelValue) throws InvalidImageDataException {
+        super(name, width, height);
 
-    private byte[][] pixels;
+        try {
+            this.magicWord = MagicWord.valueOf(magicWord);
+        }
+        catch(IllegalArgumentException ex){
+            throw new IllegalArgumentException("Invalid magic word");
+        }
 
-    public NetpbmFormatImage(MagicWord magicWord, int width, int height, byte maxPixelValue
-    ) {
+        if(maxPixelValue < 0)
+            throw new InvalidImageDataException("Value is out of range");
+        else
+            setMaxPixelValue(this.magicWord, maxPixelValue);
+
+        setPixelFormat(this.magicWord);
+    }
+
+    /*public void setMagicWord(MagicWord magicWord){
         this.magicWord = magicWord;
-
-        this.width = width;
-
-        this.height = height;
-
-        setMaxPixelValue(magicWord, maxPixelValue);
-
-        this.pixels = new byte[width][height];
-    }
-
-    public void setMagicWord(MagicWord magicWord){
-        this.magicWord = magicWord;
-    }
-
-    public void setWidth(int width){
-        this.width = width;
-    }
-
-    public void setHeight(int height){
-        this.height = height;
-    }
+    }*/
 
     private void setMaxPixelValue(MagicWord magicWord, byte maxPixelValue){
         switch(magicWord){
@@ -47,23 +42,42 @@ public class NetpbmFormatImage {
         }
     }
 
+    private void setPixelFormat(MagicWord magicWord){
+        switch(magicWord){
+            case P1,P2,P3:
+                this.pixelFormat = PixelFormat.ASCII;
+                break;
+            case P4,P5,P6:
+                this.pixelFormat = PixelFormat.BINARY;
+        }
+    }
+
     public MagicWord getMagicWord() {
         return magicWord;
     }
 
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public byte getMaxPixelValue() {
+    public short getMaxPixelValue() {
         return maxPixelValue;
     }
 
-    public byte[][] getPixels(){
-        return pixels;
+    public PixelFormat getPixelFormat(){
+        return pixelFormat;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        NetpbmFormatImage image = (NetpbmFormatImage) o;
+
+        return super.equals(o) && this.magicWord == image.magicWord && this.maxPixelValue == image.maxPixelValue;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), getMagicWord(), getMaxPixelValue(), getPixelFormat());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s, magic word:%s, max pixel value:%d", super.toString(), magicWord.toString(), maxPixelValue);
     }
 }

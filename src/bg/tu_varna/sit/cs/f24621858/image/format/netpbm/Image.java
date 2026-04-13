@@ -1,5 +1,7 @@
 package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
 
+import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -11,9 +13,9 @@ public abstract class Image {
 
     protected int height;
 
-    protected short[][] pixels;
+    protected int[][] pixels;
 
-    public Image(String name, int width, int height) throws InvalidImageDataException{
+    public Image(String name, int width, int height) throws InvalidImageDataException {
         if(Objects.equals(name,null))
             throw new InvalidImageDataException("Image name can`t be empty");
         else
@@ -28,7 +30,7 @@ public abstract class Image {
         }
 
         if(width != 0 && height != 0)
-            this.pixels = new byte[width][height];
+            this.pixels = new int[width][height];
     }
 
     public void setName(String name){
@@ -43,7 +45,7 @@ public abstract class Image {
         this.height = height;
     }
 
-    public void setPixels(short[][] pixels){
+    public void setPixels(int[][] pixels){
         this.pixels = pixels;
     }
 
@@ -59,7 +61,7 @@ public abstract class Image {
         return height;
     }
 
-    public short[][] getPixels(){
+    public int[][] getPixels(){
         return pixels;
     }
 

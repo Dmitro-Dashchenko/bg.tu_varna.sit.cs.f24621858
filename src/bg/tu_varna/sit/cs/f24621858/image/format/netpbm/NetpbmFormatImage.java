@@ -1,23 +1,20 @@
 package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
 
+import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
+
 import java.util.Objects;
 
-public class NetpbmFormatImage extends Image{
+public class NetpbmFormatImage extends Image implements Cloneable{
     private MagicWord magicWord;
 
-    private short maxPixelValue;
+    private int maxPixelValue;
 
     private PixelFormat pixelFormat;
 
-    public NetpbmFormatImage(String name, String magicWord, int width, int height, short maxPixelValue) throws InvalidImageDataException {
+    public NetpbmFormatImage(String name, MagicWord magicWord, int width, int height, int maxPixelValue) throws InvalidImageDataException {
         super(name, width, height);
 
-        try {
-            this.magicWord = MagicWord.valueOf(magicWord);
-        }
-        catch(IllegalArgumentException ex){
-            throw new IllegalArgumentException("Invalid magic word");
-        }
+        this.magicWord = magicWord;
 
         if(maxPixelValue < 0)
             throw new InvalidImageDataException("Value is out of range");
@@ -27,11 +24,7 @@ public class NetpbmFormatImage extends Image{
         setPixelFormat(this.magicWord);
     }
 
-    /*public void setMagicWord(MagicWord magicWord){
-        this.magicWord = magicWord;
-    }*/
-
-    private void setMaxPixelValue(MagicWord magicWord, byte maxPixelValue){
+    private void setMaxPixelValue(MagicWord magicWord, int maxPixelValue){
         switch(magicWord){
             case P1,P4:
                 this.maxPixelValue = 1;
@@ -56,7 +49,7 @@ public class NetpbmFormatImage extends Image{
         return magicWord;
     }
 
-    public short getMaxPixelValue() {
+    public int getMaxPixelValue() {
         return maxPixelValue;
     }
 
@@ -79,5 +72,16 @@ public class NetpbmFormatImage extends Image{
     @Override
     public String toString() {
         return String.format("%s, magic word:%s, max pixel value:%d", super.toString(), magicWord.toString(), maxPixelValue);
+    }
+
+    @Override
+    public NetpbmFormatImage clone() {
+        try {
+            NetpbmFormatImage clone = (NetpbmFormatImage) super.clone();
+            // TODO: copy mutable state here, so the clone can't change the internals of the original
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

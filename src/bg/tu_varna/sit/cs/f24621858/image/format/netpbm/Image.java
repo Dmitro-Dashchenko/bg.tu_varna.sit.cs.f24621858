@@ -2,6 +2,7 @@ package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
 
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Objects;
 

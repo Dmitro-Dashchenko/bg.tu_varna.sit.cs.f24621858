@@ -4,12 +4,10 @@ import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
 
 import java.util.Objects;
 
-public class NetpbmFormatImage extends Image implements Cloneable{
+public class NetpbmFormatImage extends Image /*implements Cloneable*/{
     private MagicWord magicWord;
 
     private int maxPixelValue;
-
-    private PixelFormat pixelFormat;
 
     public NetpbmFormatImage(String name, MagicWord magicWord, int width, int height, int maxPixelValue) throws InvalidImageDataException {
         super(name, width, height);
@@ -21,8 +19,8 @@ public class NetpbmFormatImage extends Image implements Cloneable{
         else
             setMaxPixelValue(this.magicWord, maxPixelValue);
 
-        setPixelFormat(this.magicWord);
     }
+
 
     private void setMaxPixelValue(MagicWord magicWord, int maxPixelValue){
         switch(magicWord){
@@ -35,16 +33,6 @@ public class NetpbmFormatImage extends Image implements Cloneable{
         }
     }
 
-    private void setPixelFormat(MagicWord magicWord){
-        switch(magicWord){
-            case P1,P2,P3:
-                this.pixelFormat = PixelFormat.ASCII;
-                break;
-            case P4,P5,P6:
-                this.pixelFormat = PixelFormat.BINARY;
-        }
-    }
-
     public MagicWord getMagicWord() {
         return magicWord;
     }
@@ -53,8 +41,14 @@ public class NetpbmFormatImage extends Image implements Cloneable{
         return maxPixelValue;
     }
 
-    public PixelFormat getPixelFormat(){
-        return pixelFormat;
+    /*public void switchPixelFormat(){
+        if(magicWord == MagicWord.P1)
+            magicWord = MagicWord.P4;
+
+    }*/
+
+    public static PixelFormat getPixelFormat(MagicWord magicWord){
+        return magicWord.getPixelFormat();
     }
 
     @Override
@@ -66,7 +60,7 @@ public class NetpbmFormatImage extends Image implements Cloneable{
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getMagicWord(), getMaxPixelValue(), getPixelFormat());
+        return Objects.hash(super.hashCode(), getMagicWord(), getMaxPixelValue());
     }
 
     @Override

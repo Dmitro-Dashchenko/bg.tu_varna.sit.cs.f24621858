@@ -6,6 +6,6 @@ public class EOFExceptionChecker implements Checker {
     @Override
     public void check(int fileElement) throws EOFException{
         if(fileElement == -1)
-            throw new EOFException("EOFException occurred: reached end of file during reading of token");
+            throw new EOFException("EOFException occurred: unexpected reach of file's end");
     }
 }

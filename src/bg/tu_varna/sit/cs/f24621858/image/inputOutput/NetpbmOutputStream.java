@@ -1,24 +1,26 @@
-package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
+package bg.tu_varna.sit.cs.f24621858.image.inputOutput;
 
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
+import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.MagicWord;
+import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
 
 import java.io.*;
 
-import java.nio.file.Path;
-
 import java.nio.charset.StandardCharsets;
 
-import java.util.Objects;
+public class NetpbmOutputStream extends ImageOutputStream {
 
-public class NetpbmOutputStream{
+    public NetpbmOutputStream(NetpbmFormatImage image){
+        super(image);
+    }
 
-    public File write(NetpbmFormatImage image) throws FileNotFoundException, IOException{
+    public File writeImage() throws FileNotFoundException, IOException{
 
         File imageFile = new File(image.getName());
 
         try(BufferedOutputStream imageOutputStream = new BufferedOutputStream(new FileOutputStream(imageFile))){
-            writeHeader(imageOutputStream, image);
-            writeBody(imageOutputStream, image);
+            writeHeader(imageOutputStream, (NetpbmFormatImage) image);
+            writeBody(imageOutputStream, (NetpbmFormatImage) image);
         }
         catch (FileNotFoundException e){
             throw new FileNotFoundException("Exception occurred: file wasn't found" + e.getMessage());
@@ -51,51 +53,40 @@ public class NetpbmOutputStream{
         StringBuilder headerToStringBuilder = new StringBuilder();
 
         switch(magicWord){
-            case P1,P4:
+            case P4:
                 headerToStringBuilder.append(image.getMagicWord().toString()).append('\n').append(image.getWidth()).append(' ').append(image.getHeight()).append('\n');
                 break;
-            case P2,P5:
+            case P5:
                 headerToStringBuilder.append(image.getMagicWord().toString()).append('\n').append(image.getWidth()).append(' ').append(image.getHeight()).append('\n').append(image.getMaxPixelValue()).append('\n');
                 break;
-            case P3,P6:
+            case P6:
                 headerToStringBuilder.append(image.getMagicWord().toString()).append('\n').append(image.getWidth() / 3).append(' ').append(image.getHeight()).append('\n').append(image.getMaxPixelValue()).append('\n');
                 break;
         }
         return headerToStringBuilder.toString();
     }
 
-    public void writeBody(BufferedOutputStream imageOutputStream, NetpbmFormatImage image) throws IOException, InvalidImageDataException{
-
-        int[][] pixels;
-
-        int rows, columns;
+    public void writeBody(BufferedOutputStream imageOutputStream, NetpbmFormatImage image) throws IOException, InvalidImageDataException {
 
         DataOutputStream bodyOutputStream = new DataOutputStream(imageOutputStream);
 
-        if(image.getHeight() < 1 || image.getWidth() < 1) {
-            throw new InvalidImageDataException("Exception occurred: there is empty parameter fields: image width or/and height");
-        }
-        else {
-            rows = image.getHeight();
-            columns  = image.getWidth();
-        }
-
-        if (image.getPixels() == null) {
+        if (image.getPixels() == null)
             throw new InvalidImageDataException("Exception occurred: pixels array is empty");
-        }
-        else {
-            pixels = image.getPixels();
-        }
 
-        if(image.getMaxPixelValue() < 0)
+        if (image.getHeight() < 1 || image.getWidth() < 1)
+            throw new InvalidImageDataException("Exception occurred: there is empty parameter fields: image width or/and height");
+
+        if (image.getMaxPixelValue() < 1 || image.getMaxPixelValue() > 65535)
             throw new InvalidImageDataException("Exception occurred: invalid max pixel value");
-        else{
-        for(int i = 0; i < rows;i++){
-            for(int j = 0; j < columns; j++){
-                bodyOutputStream.write(pixels[i][j]);
-            }
-         }
-        }
-    }
 
+        if (image.getMagicWord() == MagicWord.P4)
+            writeByteSizePixels(bodyOutputStream, ByteArchiver.pack(image.getPixels(), image.getWidth()));
+
+        else if (image.getMaxPixelValue() < 256)
+            writeByteSizePixels(bodyOutputStream, image.getPixels());
+
+        else
+            writeShortSizePixels(bodyOutputStream, image.getPixels());
+
+    }
 }

@@ -8,85 +8,77 @@ import java.io.*;
 
 import java.nio.charset.StandardCharsets;
 
-public class NetpbmOutputStream extends ImageOutputStream {
+public class NetpbmOutputStream extends NetpbmOutput {
 
     public NetpbmOutputStream(NetpbmFormatImage image){
         super(image);
     }
 
-    public File writeImage() throws FileNotFoundException, IOException{
+    @Override
+    protected void writePixels(FileOutputStream bodyOutputStream) throws IOException{
 
-        File imageFile = new File(image.getName());
-
-        try(BufferedOutputStream imageOutputStream = new BufferedOutputStream(new FileOutputStream(imageFile))){
-            writeHeader(imageOutputStream, (NetpbmFormatImage) image);
-            writeBody(imageOutputStream, (NetpbmFormatImage) image);
-        }
-        catch (FileNotFoundException e){
-            throw new FileNotFoundException("Exception occurred: file wasn't found" + e.getMessage());
-        }
-        catch(IOException e){
-            throw new IOException("Exception occurred: IOException during file writing",e);
-        }
-
-        return imageFile;
-    }
-
-    public void writeHeader(BufferedOutputStream imageOutputStream , NetpbmFormatImage image) throws IOException{
-
-        String headerAsString;
-
-        byte[] headerAsByteArray;
-
-        headerAsString = headerToStringBuilder(image);
-
-        headerAsByteArray = headerAsString.getBytes(StandardCharsets.US_ASCII);
-
-        imageOutputStream.write(headerAsByteArray);
-
-    }
-
-    private String headerToStringBuilder(NetpbmFormatImage image){
-
-        MagicWord magicWord =  image.getMagicWord();
-
-        StringBuilder headerToStringBuilder = new StringBuilder();
-
-        switch(magicWord){
-            case P4:
-                headerToStringBuilder.append(image.getMagicWord().toString()).append('\n').append(image.getWidth()).append(' ').append(image.getHeight()).append('\n');
-                break;
-            case P5:
-                headerToStringBuilder.append(image.getMagicWord().toString()).append('\n').append(image.getWidth()).append(' ').append(image.getHeight()).append('\n').append(image.getMaxPixelValue()).append('\n');
-                break;
-            case P6:
-                headerToStringBuilder.append(image.getMagicWord().toString()).append('\n').append(image.getWidth() / 3).append(' ').append(image.getHeight()).append('\n').append(image.getMaxPixelValue()).append('\n');
-                break;
-        }
-        return headerToStringBuilder.toString();
-    }
-
-    public void writeBody(BufferedOutputStream imageOutputStream, NetpbmFormatImage image) throws IOException, InvalidImageDataException {
-
-        DataOutputStream bodyOutputStream = new DataOutputStream(imageOutputStream);
-
-        if (image.getPixels() == null)
-            throw new InvalidImageDataException("Exception occurred: pixels array is empty");
-
-        if (image.getHeight() < 1 || image.getWidth() < 1)
-            throw new InvalidImageDataException("Exception occurred: there is empty parameter fields: image width or/and height");
-
-        if (image.getMaxPixelValue() < 1 || image.getMaxPixelValue() > 65535)
-            throw new InvalidImageDataException("Exception occurred: invalid max pixel value");
+        DataOutputStream pixelOutputStream = new DataOutputStream(bodyOutputStream);
 
         if (image.getMagicWord() == MagicWord.P4)
-            writeByteSizePixels(bodyOutputStream, ByteArchiver.pack(image.getPixels(), image.getWidth()));
+            writeBitSizePixels(pixelOutputStream, image.getPixels());
 
         else if (image.getMaxPixelValue() < 256)
-            writeByteSizePixels(bodyOutputStream, image.getPixels());
+            writeByteSizePixels(pixelOutputStream, image.getPixels());
 
         else
-            writeShortSizePixels(bodyOutputStream, image.getPixels());
+            writeShortSizePixels(pixelOutputStream, image.getPixels());
+    }
 
+    private void writeBitSizePixels(DataOutputStream pixelOutputStream, int[][][] pixels) throws IOException{
+        int rows = pixels.length,  columns = pixels[0].length;
+
+        int[][] packedPixels = convertTo2D(pixels);
+
+        packedPixels = ByteArchiver.pack(packedPixels, columns);
+
+        columns = packedPixels[0].length;
+
+        for (int row = 0; row < rows; row++){
+            for (int column = 0; column < columns; column++){
+                pixelOutputStream.write(packedPixels[row][column]);
+            }
+        }
+    }
+
+    private void writeByteSizePixels(DataOutputStream pixelStream, int[][][]pixels) throws IOException{
+        int rows = pixels.length, columns = pixels[0].length, channels = pixels[0][0].length;
+
+        for(int i = 0; i < rows; i++){
+            for(int j = 0; j < columns; j++){
+                for(int k = 0; k < channels; k++) {
+                    pixelStream.write(pixels[i][j][k]);
+                }
+            }
+        }
+    }
+
+    private void writeShortSizePixels(DataOutputStream pixelStream, int[][][]pixels) throws IOException{
+        int rows = pixels.length, columns = pixels[0].length, channels = pixels[0][0].length;
+
+        for(int i = 0; i < pixels.length; i++){
+            for(int j = 0; j < pixels[0].length; j++){
+                for(int k = 0; k < channels; k++) {
+                    pixelStream.writeShort(pixels[i][j][k]);
+                }
+            }
+        }
+    }
+
+    private int[][] convertTo2D(int[][][] unpackedPixels){
+        int rows = unpackedPixels.length, columns = unpackedPixels[0].length;
+
+        int[][]pixels = new int[rows][columns];
+
+        for (int i = 0; i < pixels.length; i++){
+            for (int j = 0; j < pixels[0].length; j++){
+                pixels[i][j] = unpackedPixels[i][j][0];
+            }
+        }
+        return pixels;
     }
 }

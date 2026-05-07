@@ -2,10 +2,8 @@ package bg.tu_varna.sit.cs.f24621858.image.inputOutput;
 
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.EmptyFileNameException;
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.Image;
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
+import bg.tu_varna.sit.cs.f24621858.image.format.Image;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;

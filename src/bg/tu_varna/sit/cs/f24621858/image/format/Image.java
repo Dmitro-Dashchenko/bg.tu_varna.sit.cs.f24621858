@@ -1,8 +1,7 @@
-package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
+package bg.tu_varna.sit.cs.f24621858.image.format;
 
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -14,9 +13,11 @@ public abstract class Image {
 
     protected int height;
 
-    protected int[][] pixels;
+    protected int channels;
 
-    public Image(String name, int width, int height) throws InvalidImageDataException {
+    protected int[][][] pixels;
+
+    public Image(String name, int width, int height, int channels) throws InvalidImageDataException {
         if(Objects.equals(name,null))
             throw new InvalidImageDataException("Image name can`t be empty");
         else
@@ -30,8 +31,8 @@ public abstract class Image {
             this.height = height;
         }
 
-        if(width != 0 && height != 0)
-            this.pixels = new int[width][height];
+        if(width != 0 && height != 0 && channels != 0)
+            this.pixels = new int[height][width][channels];
     }
 
     public void setName(String name){
@@ -46,7 +47,11 @@ public abstract class Image {
         this.height = height;
     }
 
-    public void setPixels(int[][] pixels){
+    public void setChannels(int channels){
+        this.channels = channels;
+    }
+
+    public void setPixels(int[][][] pixels){
         this.pixels = pixels;
     }
 
@@ -62,7 +67,11 @@ public abstract class Image {
         return height;
     }
 
-    public int[][] getPixels(){
+    public int getChannels() {
+        return channels;
+    }
+
+    public int[][][] getPixels(){
         return pixels;
     }
 

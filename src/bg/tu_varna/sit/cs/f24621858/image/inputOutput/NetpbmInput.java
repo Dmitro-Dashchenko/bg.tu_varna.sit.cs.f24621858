@@ -24,7 +24,7 @@ public abstract class NetpbmInput extends ImageInput{
     public NetpbmFormatImage readImage() throws IOException, IllegalArgumentException{
 
         String imageHeader;
-        int[][] imagePixels;
+        int[][][] imagePixels;
 
         try(FileInputStream fileImageStream = new FileInputStream(objectPath)){
 
@@ -58,11 +58,9 @@ public abstract class NetpbmInput extends ImageInput{
 
         try{
 
-            token = headerTokenizer.readToken();
+            magicWord = NetpbmFormatImage.getMagicWord(fileImageStream);
 
-            magicWord = readMagicWord(token);
-
-            headerBuilder.append(magicWord).append('\n');
+            //headerBuilder.append(magicWord.toString()).append('\n');
 
             headerTokenCount = headerTokenizer.setHeaderTokenCount(magicWord);
 
@@ -78,23 +76,9 @@ public abstract class NetpbmInput extends ImageInput{
         return headerBuilder.toString();
     }
 
-    private MagicWord readMagicWord(String token) throws IllegalArgumentException{
-
-        MagicWord magicWord;
-
-        try{
-            magicWord = MagicWord.valueOf(token.trim());
-        }
-        catch(IllegalArgumentException e) {
-            throw new IllegalArgumentException(String.format("There is no such magic word as %s", token));
-        }
-
-        return magicWord;
-    }
-
     @Override
-    public int[][] readBody(FileInputStream fileImageStream) throws EOFException, IOException, InvalidImageDataException {
-        int[][] pixels;
+    public int[][][] readBody(FileInputStream fileImageStream) throws EOFException, IOException, InvalidImageDataException {
+        int[][][] pixels;
 
         if(image.getWidth() < 1 || image.getHeight() < 1)
             throw new InvalidImageDataException("Invalid value for image width or/and height");
@@ -107,26 +91,26 @@ public abstract class NetpbmInput extends ImageInput{
         return pixels;
     }
 
-    protected abstract int[][] getPixels(FileInputStream fileImageStream, NetpbmFormatImage image)  throws EOFException, IOException;
+    protected abstract int[][][] getPixels(FileInputStream fileImageStream, NetpbmFormatImage image)  throws EOFException, IOException;
 
     @Override
-    protected NetpbmFormatImage setImage(String imageHeader) throws IllegalArgumentException, InvalidImageDataException {
+    protected NetpbmFormatImage setImage(String imageHeader) throws IllegalArgumentException {
         NetpbmFormatImage image;
 
         Scanner headerScanner = new Scanner(imageHeader);
 
         switch(magicWord){
-            case P4:
-                image = new NetpbmFormatImage(objectPath, magicWord, headerScanner.nextInt(), headerScanner.nextInt(),(short)1);
+            case P1, P4:
+                image = new NetpbmFormatImage(objectPath, magicWord, headerScanner.nextInt(), headerScanner.nextInt(),(short)1, 1);
                 break;
-            case P5:
-                image = new NetpbmFormatImage(objectPath, magicWord, headerScanner.nextInt(), headerScanner.nextInt(), headerScanner.nextShort());
+            case P2, P5:
+                image = new NetpbmFormatImage(objectPath, magicWord, headerScanner.nextInt(), headerScanner.nextInt(), headerScanner.nextShort(), 1);
                 break;
-            case P6:
-                image = new NetpbmFormatImage(objectPath, magicWord, headerScanner.nextInt() * 3, headerScanner.nextInt(), headerScanner.nextShort());
+            case P3, P6:
+                image = new NetpbmFormatImage(objectPath, magicWord, headerScanner.nextInt() , headerScanner.nextInt(), headerScanner.nextShort(), 3);
                 break;
             default:
-                throw new InvalidImageDataException("Exception occurred: only binary pixel format allowed");
+                throw new IllegalArgumentException("Invalid magic word");
         }
         headerScanner.close();
 

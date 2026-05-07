@@ -1,9 +1,5 @@
 package bg.tu_varna.sit.cs.f24621858.image.inputOutput;
 
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.Image;
-
-import java.util.Objects;
-
 public class ByteArchiver {
 
     public static int[][] pack(int[][] bits, int bitsInRow) {

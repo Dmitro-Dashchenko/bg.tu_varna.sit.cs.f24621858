@@ -8,5 +8,5 @@ public interface FileInput {
 
     String readHeader(FileInputStream fileInputStream) throws IOException;
 
-    int[][] readBody(FileInputStream fileInputStream)  throws EOFException, IOException;
+    int[][][] readBody(FileInputStream fileInputStream)  throws EOFException, IOException;
 }

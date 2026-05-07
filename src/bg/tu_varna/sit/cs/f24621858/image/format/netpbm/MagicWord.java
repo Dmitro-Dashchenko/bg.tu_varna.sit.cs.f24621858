@@ -1,5 +1,7 @@
 package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
 
+import bg.tu_varna.sit.cs.f24621858.image.format.PixelFormat;
+
 public enum MagicWord {
     P1(PixelFormat.ASCII),
     P2(PixelFormat.ASCII),

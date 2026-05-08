@@ -5,10 +5,9 @@ import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
 import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.MagicWord;
 import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
 
-import java.io.EOFException;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 public abstract class NetpbmInput extends ImageInput{
@@ -26,7 +25,9 @@ public abstract class NetpbmInput extends ImageInput{
         String imageHeader;
         int[][][] imagePixels;
 
-        try(FileInputStream fileImageStream = new FileInputStream(objectPath)){
+        Path fileImage = Paths.get(objectPath);
+
+        try(FileInputStream fileImageStream = new FileInputStream(fileImage.toFile())){
 
             imageHeader = readHeader(fileImageStream);
 

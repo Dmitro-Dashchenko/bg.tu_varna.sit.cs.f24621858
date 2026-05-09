@@ -1,42 +1,30 @@
 package bg.tu_varna.sit.cs.f24621858.commands.imageRedactor;
 
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
+import bg.tu_varna.sit.cs.f24621858.commands.Command;
+import bg.tu_varna.sit.cs.f24621858.commands.Session;
+import bg.tu_varna.sit.cs.f24621858.commands.SessionManager;
+import bg.tu_varna.sit.cs.f24621858.commands.SessionNullPointerException;
 
-import java.util.List;
-import java.util.Objects;
+public abstract class TransformationCommand implements Command {
 
-public abstract class TransformationCommand implements RedactorCommand {
+    private final SessionManager sessionManager;
 
-    protected List<NetpbmFormatImage> images;
-
-    public TransformationCommand(List<NetpbmFormatImage> images){
-        this.images = images;
+    public TransformationCommand(SessionManager sessionManager) {
+        this.sessionManager = sessionManager;
     }
 
-    public List<NetpbmFormatImage> getImages() {
-        return images;
-    }
+    public abstract Transformation createTransformation(String[] args);
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TransformationCommand that)) return false;
-        return Objects.equals(getImages(), that.getImages());
-    }
+    public void execute(String[] args) {
+        Session session = sessionManager.getCurrentSession();
+        if (session == null || !session.hasImages())
+            throw new SessionNullPointerException("Exception occurred: no active session. Use 'load' first.");
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(getImages());
-    }
+        Transformation transformation = createTransformation(args);
+        if (transformation == null) return;
 
-    @Override
-    public String toString() {
-        StringBuilder commandImagesBuilder = new StringBuilder();
-
-        for(NetpbmFormatImage image : images){
-            commandImagesBuilder.append(image.toString()).append('\n');
-        }
-
-        return commandImagesBuilder.toString();
+        session.addTransformation(transformation);
+        System.out.println("Transformation '" + transformation.getName() + "' queued.");
     }
 }

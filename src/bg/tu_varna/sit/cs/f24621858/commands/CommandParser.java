@@ -8,11 +8,34 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Tokenizes a raw input line and dispatches the result to the appropriate
+ * {@link Command} implementation.
+ *
+ * <p>Two-word command prefixes are handled specially.
+ *
+ * <p>Quoted strings (wrapped in {@code "}) are treated as a single token,
+ * allowing file paths that contain spaces:
+ * <pre>
+ *   load "C:\My Images\photo.ppm"
+ * </pre>
+ * The surrounding quotes are stripped before the token is passed to the command.
+ *
+ * <p>All command keywords are matched case-insensitively.
+ *
+ * <p>Supported commands and their keyword mappings:
+ * <pre>
+ *   load, add, close, save, session, switch, grayscale,
+ *   monochrome, negative, rotate,undo, collage, help, exit.
+ * </pre>
+ *
+ *@author Dmitro Dashchenko
+ *
+ */
 public class CommandParser {
 
     private final SessionManager sessionManager;
 
-    // --- commands ---
     private final Command loadCommand;
     private final Command addCommand;
     private final Command closeCommand;
@@ -29,6 +52,12 @@ public class CommandParser {
     private final Command undoCommand;
     private final Command collageCommand;
 
+    /**
+     * Constructs a {@code CommandParser} and initialises all command instances.
+     *
+     * @param sessionManager the application-wide session manager shared by all
+     *                       commands; must not be {@code null}
+     */
     public CommandParser(SessionManager sessionManager) {
         this.sessionManager = sessionManager;
 
@@ -49,6 +78,14 @@ public class CommandParser {
         collageCommand     = new CollageCommand(sessionManager);
     }
 
+    /**
+     * Parses and executes a single line of user input.
+     *
+     * <p>Blank or {@code null} lines are silently ignored.
+     * Unknown command keywords produce an error message suggesting {@code help}.
+     *
+     * @param line raw input line as typed by the user; may be {@code null} or blank
+     */
     public void parse(String line) {
         if (line == null || line.isBlank()) return;
 
@@ -133,6 +170,13 @@ public class CommandParser {
         }
     }
 
+    /**
+     * Splits {@code line} into tokens, treating double-quoted substrings as
+     * single tokens and stripping the surrounding quotes.
+     *
+     * @param line the trimmed input line
+     * @return array of tokens; never {@code null}, may be empty
+     */
     private String[] divide(String line) {
         String[] tokens = line.split(" ");
         

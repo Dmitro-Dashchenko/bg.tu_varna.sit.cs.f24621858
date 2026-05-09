@@ -9,16 +9,47 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Abstract Template Method implementation for writing Netpbm image files.
+ *
+ * <p>Provides concrete implementations for both header and body writing,
+ * leaving only the format-specific pixel serialisation to subclasses.
+ *
+ * @author Dmitro Dashchenko
+ *
+ * @see NetpbmWriter
+ * @see NetpbmOutputStream
+ * @see ImageOutput
+ */
 public abstract class NetpbmOutput extends ImageOutput{
 
+    /**
+     * The Netpbm image to write.
+     */
     NetpbmFormatImage image;
 
+    /**
+     * Constructs a {@code NetpbmOutput} for the given image.
+     *
+     * @param image the image to write; must not be {@code null}
+     * @throws NullPointerException if {@code image} is {@code null}
+     */
     public NetpbmOutput(NetpbmFormatImage image) throws NullPointerException{
         super(image);
 
         this.image = image;
     }
 
+    /**
+     * Writes the ASCII header of the Netpbm file to {@code imageOutputStream}.
+     *
+     * <p>The header is built by {@link #headerToStringBuilder(NetpbmFormatImage)}
+     * and emitted as US-ASCII bytes.
+     *
+     * @param imageOutputStream the open output stream; must not be
+     *                          {@code null}
+     * @throws IOException if an I/O error occurs
+     */
     @Override
     public void writeHeader(FileOutputStream imageOutputStream) throws IOException, InvalidImageDataException {
 
@@ -34,6 +65,16 @@ public abstract class NetpbmOutput extends ImageOutput{
 
     }
 
+    /**
+     * Builds the ASCII header string for the given {@code image}.
+     *
+     * <p>The string ends with a newline after the last token so that the
+     * binary pixel data (or ASCII pixel data) immediately follows without
+     * any additional separator.
+     *
+     * @param image the image whose metadata is to be serialised
+     * @return the complete header string; never {@code null}
+     */
     private String headerToStringBuilder(NetpbmFormatImage image) throws InvalidImageDataException{
 
         MagicWord magicWord =  image.getMagicWord();
@@ -56,6 +97,14 @@ public abstract class NetpbmOutput extends ImageOutput{
         return headerToStringBuilder.toString();
     }
 
+    /**
+     * Validates image data and delegates pixel writing to
+     * {@link #writePixels(FileOutputStream)}.
+     *
+     * @param imageOutputStream the stream positioned after the header
+     * @throws IOException               if any I/O error occurs
+     * @throws InvalidImageDataException if any validation check fails
+     */
     public void writeBody(FileOutputStream imageOutputStream) throws IOException, InvalidImageDataException {
 
         if (image.getPixels() == null)
@@ -71,5 +120,15 @@ public abstract class NetpbmOutput extends ImageOutput{
 
     }
 
+    /**
+     * Serialises the pixel data to {@code fileImageStream}.
+     *
+     * <p>This is the abstract step in the Template Method.
+     * {@link NetpbmWriter} writes ASCII decimal values;
+     * {@link NetpbmOutputStream} writes raw binary bytes.
+     *
+     * @param fileImageStream the stream positioned after the header
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void writePixels(FileOutputStream fileImageStream) throws IOException;
 }

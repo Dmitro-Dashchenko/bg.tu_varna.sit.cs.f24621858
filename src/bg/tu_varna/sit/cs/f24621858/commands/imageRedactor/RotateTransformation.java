@@ -3,43 +3,76 @@ package bg.tu_varna.sit.cs.f24621858.commands.imageRedactor;
 import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
 
 /**
- * Rotates an image 90 degrees left (counter-clockwise) or right (clockwise).
+ * Rotates an image by exactly 90 degrees left (counter-clockwise) or
+ * right (clockwise).
  *
- * After a 90° rotation the image dimensions swap:
+ * <p>After a 90° rotation the image dimensions swap:
+ * <pre>
  *   new height = old width
  *   new width  = old height
+ * </pre>
  *
- * Pixel layout: int[height][width][channels] — channels are copied as-is.
+ * <p>The rotation direction is provided at construction time via the
+ * {@link Direction} enum and is immutable for the lifetime of the object.
  *
- * Rotation formulas (0-based indices):
- *   Left  (CCW): dst[oldW-1-j][i]   = src[i][j]
- *   Right (CW):  dst[j][oldH-1-i]   = src[i][j]
+ * @author Dmitro Dashchenko
+ *
+ * @see Direction
+ * @see Transformation
  */
 public class RotateTransformation implements Transformation {
 
+    /** The rotation direction for this instance (immutable). */
     private final Direction direction;
 
+    /**
+     * Constructs a {@code RotateTransformation} for the given direction.
+     *
+     * @param direction {@link Direction#LEFT} for 90° counter-clockwise,
+     *                  {@link Direction#RIGHT} for 90° clockwise;
+     *                  must not be {@code null}
+     */
     public RotateTransformation(Direction direction) {
         this.direction = direction;
     }
 
+    /**
+     * Applies the 90° rotation to {@code image}.
+     *
+     * <p>Creates a new {@link NetpbmFormatImage} with swapped dimensions
+     * and delegates the actual pixel mapping to
+     * {@link #setRotation(NetpbmFormatImage)}.
+     *
+     * @param image the source image; must not be {@code null}
+     * @return a new image rotated 90° in the configured direction;
+     *         {@code newWidth = oldHeight}, {@code newHeight = oldWidth}
+     */
+
     @Override
     public NetpbmFormatImage apply(NetpbmFormatImage image) {
-        int oldHeight = image.getHeight();
-        int oldWidth  = image.getWidth();
+        int newHeight = image.getWidth();
+        int newWidth  = image.getHeight();
 
-        int newHeight = oldWidth;
-        int newWidth  = oldHeight;
-
-        int[][][] result = setRotation(image, newWidth, newHeight);
+        int[][][] result = setRotation(image);
 
         NetpbmFormatImage out = new NetpbmFormatImage(image.getName(), image.getMagicWord(), newWidth, newHeight, image.getMaxPixelValue(), image.getChannels());
         out.setPixels(result);
         return out;
     }
 
-    private int[][][] setRotation(NetpbmFormatImage image, int oldHeight, int oldWidth) {
-        int channels  = image.getChannels();
+    /**
+     * Computes the rotated pixel array using the coordinate-transformation
+     * formulas for the configured direction.
+     * All {@code channels} values are copied atomically per pixel.
+     *
+     * @param image the source image providing dimensions, channels and pixel data
+     * @return the rotated pixel array
+     *         {@code int[oldWidth][oldHeight][channels]}
+     */
+    private int[][][] setRotation(NetpbmFormatImage image) {
+        int oldHeight  = image.getHeight();
+        int oldWidth = image.getWidth();
+        int channels = image.getChannels();
 
         int[][][] sourcePixels = image.getPixels();
         int[][][] result = new int[oldWidth][oldHeight][channels];
@@ -63,6 +96,12 @@ public class RotateTransformation implements Transformation {
         return result;
     }
 
+    /**
+     * Returns the display name of this transformation, including the
+     * direction.
+     *
+     * @return {@code "rotate left"} or {@code "rotate right"}
+     */
     @Override
     public String getName() {
         return "rotate " + direction.name().toLowerCase();

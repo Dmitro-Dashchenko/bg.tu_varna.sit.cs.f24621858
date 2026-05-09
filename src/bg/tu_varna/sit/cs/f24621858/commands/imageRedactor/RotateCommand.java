@@ -2,12 +2,35 @@ package bg.tu_varna.sit.cs.f24621858.commands.imageRedactor;
 
 import bg.tu_varna.sit.cs.f24621858.commands.SessionManager;
 
+/**
+ * Enqueues a {@link RotateTransformation} in the current session.
+ *
+ * <p>The direction ({@code left} or {@code right}) is supplied as an argument.
+ * When the session is saved, all images will be rotated 90 degrees in the
+ * specified direction.
+ *
+ * @author Dmitro Dashchenko
+ *
+ */
 public class RotateCommand extends TransformationCommand {
 
+    /**
+     * Constructs a {@code RotateCommand} backed by the given session manager.
+     *
+     * @param sessionManager the application-wide session manager; must not be {@code null}
+     */
     public RotateCommand(SessionManager sessionManager) {
         super(sessionManager);
     }
 
+    /**
+     * Parses the direction argument and returns the appropriate
+     * {@link RotateTransformation}.
+     *
+     * @param args exactly one element — {@code "left"} or {@code "right"}
+     * @return a {@link RotateTransformation} for the given direction,
+     *         or {@code null} if the argument is invalid
+     */
     @Override
     public Transformation createTransformation(String[] args) {
         if (args.length != 1) {

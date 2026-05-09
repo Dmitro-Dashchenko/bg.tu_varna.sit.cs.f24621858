@@ -7,20 +7,78 @@ import bg.tu_varna.sit.cs.f24621858.commands.SessionNullPointerException;
 import bg.tu_varna.sit.cs.f24621858.commands.general.SaveCommand;
 import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
 
+/**
+ * Creates a collage from two images already present in the current session
+ * and adds the result back to the session.
+ *
+ * <p>Usage:
+ * <pre>
+ *   collage horizontal|vertical &lt;image1&gt; &lt;image2&gt; &lt;collage path&gt;
+ * </pre>
+ * <ul>
+ *   <li>Both image names must match images in the current session.</li>
+ *   <li>Both images must have the same
+ *       {@link bg.tu_varna.sit.cs.f24621858.image.format.netpbm.MagicWord}
+ *       (format).</li>
+ *   <li>For horizontal collage: heights must be equal.</li>
+ *   <li>For vertical collage: widths must be equal.</li>
+ * </ul>
+ *
+ * <p>A {@link TransformException} thrown during validation
+ * the session is left unchanged.
+ *
+ * <p>If there is no active session, or it contains no images,
+ * {@link SessionNullPointerException} is throw.
+ *
+ * @author Dmitro Dashchenko
+ *
+ * @see TransformException
+ * @see SessionNullPointerException
+ */
 public class CollageCommand implements Command {
 
+    /** Provides access to the currently active session. */
     private final SessionManager sessionManager;
 
+    /** Parsed direction: "horizontal" or "vertical". */
     private String direction;
 
+    /** Name of the first source image. */
     private String firstName;
+
+    /** Name of the second source image. */
     private String secondName;
+
+    /** Output name for the resulting collage image. */
     private String collageName;
 
+    /**
+     * Constructs a {@code CollageCommand} backed by the given session manager.
+     *
+     * @param sessionManager the application-wide session manager;
+     *                       must not be {@code null}
+     */
     public CollageCommand(SessionManager sessionManager) {
         this.sessionManager = sessionManager;
     }
 
+    /**
+     * Parses arguments, validates inputs, builds the collage and adds it to
+     * the current session.
+     *
+     * <p>Expected {@code args} array (length = 4):
+     * <ol>
+     *   <li>Direction – {@code "horizontal"} or {@code "vertical"}
+     *       (case-insensitive)</li>
+     *   <li>Name of the first source image in the session</li>
+     *   <li>Name of the second source image in the session</li>
+     *   <li>Output name for the collage file</li>
+     * </ol>
+     *
+     * @param args the command arguments; must have exactly 4 elements
+     * @throws SessionNullPointerException if no active session with images
+     *                                     exists
+     */
     @Override
     public void execute(String[] args) {
         if (args.length != 4) {
@@ -56,6 +114,16 @@ public class CollageCommand implements Command {
         }
     }
 
+    /**
+     * Validates the two source images and dispatches to the correct
+     * collage-building method.
+     *
+     * @param firstImage  the first source image
+     * @param secondImage the second source image
+     * @return the constructed collage image
+     * @throws TransformException if validation fails (null image, format
+     *                            mismatch, or incompatible dimensions)
+     */
     private NetpbmFormatImage collageImage(NetpbmFormatImage firstImage, NetpbmFormatImage secondImage) throws TransformException{
         validateImages(firstImage, secondImage);
 
@@ -69,6 +137,14 @@ public class CollageCommand implements Command {
         return collage;
     }
 
+    /**
+     * Runs all pre-collage validation checks.
+     *
+     * @param firstImage  the first source image (may be {@code null} if not
+     *                    found in the session)
+     * @param secondImage the second source image (may be {@code null})
+     * @throws TransformException with a descriptive message if any check fails
+     */
     private void validateImages(NetpbmFormatImage firstImage, NetpbmFormatImage secondImage) throws TransformException{
         if (firstImage == null)
             throw new TransformException(String.format("Exception occurred: image \"%s\" not found in current session.", firstName));
@@ -86,14 +162,23 @@ public class CollageCommand implements Command {
             throw new TransformException("Exception occurred: images must have the same width for a vertical collage.");
     }
 
-    private NetpbmFormatImage collageHorizontal(NetpbmFormatImage img1, NetpbmFormatImage img2, String collageName) {
-        int height   = img1.getHeight();
-        int width1   = img1.getWidth(), width2   = img2.getWidth();
+    /**
+     * Builds a horizontal collage: {@code firstImage} on the left,
+     * {@code secondImage} on the right.
+     *
+     * @param firstImage        left image; heights must match
+     * @param secondImage        right image; heights must match
+     * @param collageName the name/path to assign to the new image
+     * @return the combined horizontal collage image
+     */
+    private NetpbmFormatImage collageHorizontal(NetpbmFormatImage firstImage, NetpbmFormatImage secondImage, String collageName) {
+        int height   = firstImage.getHeight();
+        int width1   = firstImage.getWidth(), width2   = secondImage.getWidth();
         int newWidth = width1 + width2;
-        int channels = img1.getChannels();
-        int maxVal   = Math.max(img1.getMaxPixelValue(), img2.getMaxPixelValue());
+        int channels = firstImage.getChannels();
+        int maxVal   = Math.max(firstImage.getMaxPixelValue(), secondImage.getMaxPixelValue());
 
-        int[][][] src1   = img1.getPixels(), src2 = img2.getPixels();
+        int[][][] src1   = firstImage.getPixels(), src2 = secondImage.getPixels();
 
         int[][][] result = new int[height][newWidth][channels];
 
@@ -112,21 +197,29 @@ public class CollageCommand implements Command {
             }
         }
 
-        NetpbmFormatImage out = new NetpbmFormatImage(collageName, img1.getMagicWord(), newWidth, height, maxVal, channels);
+        NetpbmFormatImage out = new NetpbmFormatImage(collageName, firstImage.getMagicWord(), newWidth, height, maxVal, channels);
         out.setPixels(result);
         return out;
     }
 
-    private NetpbmFormatImage collageVertical(NetpbmFormatImage img1, NetpbmFormatImage img2, String collageName) {
-        int width     = img1.getWidth();
-        int height1   = img1.getHeight();
-        int height2   = img2.getHeight();
+    /**
+     * Builds a vertical collage: {@code firstImage} on top, {@code secondImage} below.
+     *
+     * @param firstImage        top image; widths must match
+     * @param secondImage        bottom image; widths must match
+     * @param collageName the name/path to assign to the new image
+     * @return the combined vertical collage image
+     */
+    private NetpbmFormatImage collageVertical(NetpbmFormatImage firstImage, NetpbmFormatImage secondImage, String collageName) {
+        int width     = firstImage.getWidth();
+        int height1   = firstImage.getHeight();
+        int height2   = secondImage.getHeight();
         int newHeight = height1 + height2;
-        int channels  = img1.getChannels();
-        int maxVal    = Math.max(img1.getMaxPixelValue(), img2.getMaxPixelValue());
+        int channels  = firstImage.getChannels();
+        int maxVal    = Math.max(firstImage.getMaxPixelValue(), secondImage.getMaxPixelValue());
 
-        int[][][] src1   = img1.getPixels();
-        int[][][] src2   = img2.getPixels();
+        int[][][] src1   = firstImage.getPixels();
+        int[][][] src2   = secondImage.getPixels();
         int[][][] result = new int[newHeight][width][channels];
 
         for (int i = 0; i < height1; i++) {
@@ -145,11 +238,23 @@ public class CollageCommand implements Command {
             }
         }
 
-        NetpbmFormatImage resultImage = new NetpbmFormatImage(collageName, img1.getMagicWord(), width, newHeight, maxVal, channels);
+        NetpbmFormatImage resultImage = new NetpbmFormatImage(collageName, firstImage.getMagicWord(), width, newHeight, maxVal, channels);
         resultImage.setPixels(result);
         return resultImage;
     }
 
+    /**
+     * Searches the current session for an image whose stored name ends with
+     * {@code name} (supports both bare file names and full paths).
+     *
+     * <p>Uses {@link SaveCommand#extractFileName(String)} to compare just
+     * the file-name component of the stored path against {@code name}.
+     *
+     * @param session the session to search
+     * @param name    the bare file name or full path to match
+     * @return the matching {@link NetpbmFormatImage}, or {@code null} if
+     *         no image with that name is found in the session
+     */
     private NetpbmFormatImage findImage(Session session, String name) {
         for (NetpbmFormatImage image : session.getImages()) {
             if (SaveCommand.extractFileName(image.getName()).equals(name) || image.getName().equals(name)) {

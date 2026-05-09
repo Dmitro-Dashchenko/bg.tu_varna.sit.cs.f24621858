@@ -8,22 +8,43 @@ import java.util.Scanner;
 /**
  * Entry point for the Raster Graphics Editor.
  *
- * <p>Starts a Read-Eval-Print loop (REPL) that reads commands from standard
- * input line-by-line and dispatches them through {@link CommandParser}.
+ * <p>The editor is a console application that operates on
+ * Netpbm image files
+ * (PBM, PGM, PPM in both ASCII and binary variants).
  *
- * <p>Unhandled runtime exceptions from commands are caught here so that a
- * single bad command never crashes the entire program — an error message is
- * printed instead and the loop continues.
+ * <p>Unhandled {@link RuntimeException}s from any command are caught here so
+ * that a single bad command never crashes the editor — an error message is
+ * printed and the REPL continues.
+ *
+ * <p>Supported commands (see {@code help} for a full list):
+ * <pre>
+ *   load, add, close, save, save as, session info, switch,
+ *   grayscale, monochrome, negative, rotate, undo, collage, help, exit
+ * </pre>
+ *
+ * @author Dmitro Dashchenko
+ *
+ * @see CommandParser
+ * @see SessionManager
  */
 public class Main {
 
+
     private static final String BANNER =
+                    /** Welcome banner displayed once on startup. */
                     "╔══════════════════════════════════════╗\n" +
                     "║     Raster Graphics Editor  v1.0     ║\n" +
                     "║  Supported formats: PBM, PGM, PPM    ║\n" +
                     "╚══════════════════════════════════════╝\n" +
                     "Type 'help' for a list of commands.\n";
 
+    /**
+     * Application entry point.
+     * Initialises the {@link SessionManager} and {@link CommandParser},
+     * prints the welcome banner, then enters the REPL loop.
+     *
+     * @param args command-line arguments (not used)
+     */
     public static void main(String[] args) {
         System.out.println(BANNER);
 
@@ -34,7 +55,6 @@ public class Main {
         while (true) {
             System.out.print("> ");
 
-            // Handle EOF (e.g. Ctrl+D on Linux / Ctrl+Z on Windows, or piped input)
             if (!scanner.hasNextLine()) {
                 System.out.println("\nExiting the program...");
                 break;
@@ -42,13 +62,11 @@ public class Main {
 
             String line = scanner.nextLine();
 
-            // Skip blank lines silently
             if (line == null || line.isBlank()) continue;
 
             try {
                 parser.parse(line);
             } catch (RuntimeException e) {
-                // Catch unexpected runtime errors so the REPL stays alive
                 System.out.println("Unexpected error: " + e.getMessage());
             }
         }

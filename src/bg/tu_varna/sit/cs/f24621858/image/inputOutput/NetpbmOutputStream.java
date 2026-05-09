@@ -8,12 +8,40 @@ import java.io.*;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Binary Netpbm image writer implementation.
+ *
+ * <p>The class serializes pixel data directly into binary streams
+ * using {@link DataOutputStream}.</p>
+ *
+ * @author Dmitro Dashchenko
+ * @see NetpbmOutput
+ * @see NetpbmFormatImage
+ * @see ByteArchiver
+ */
 public class NetpbmOutputStream extends NetpbmOutput {
 
+    /**
+     * Creates a new binary Netpbm writer.
+     *
+     * @param image the image to be written
+     *
+     * @throws NullPointerException if the image is {@code null}
+     */
     public NetpbmOutputStream(NetpbmFormatImage image){
         super(image);
     }
 
+    /**
+     * Writes image pixel data into a binary output stream.
+     *
+     * <p>The writing strategy depends on the image format
+     * and maximum pixel value.</p>
+     *
+     * @param bodyOutputStream the output stream used for writing
+     *
+     * @throws IOException if an I/O error occurs during writing
+     */
     @Override
     protected void writePixels(FileOutputStream bodyOutputStream) throws IOException{
 
@@ -29,6 +57,14 @@ public class NetpbmOutputStream extends NetpbmOutput {
             writeShortSizePixels(pixelOutputStream, image.getPixels());
     }
 
+    /**
+     * Writes packed binary PBM pixel data.
+     *
+     * @param pixelOutputStream the binary output stream
+     * @param pixels the image pixel matrix
+     *
+     * @throws IOException if an I/O error occurs during writing
+     */
     private void writeBitSizePixels(DataOutputStream pixelOutputStream, int[][][] pixels) throws IOException{
         int rows = pixels.length,  columns = pixels[0].length;
 
@@ -45,6 +81,17 @@ public class NetpbmOutputStream extends NetpbmOutput {
         }
     }
 
+    /**
+     * Writes byte-sized pixel values.
+     *
+     * <p>This method is used for images with
+     * {@code maxPixelValue < 256}.</p>
+     *
+     * @param pixelStream the binary output stream
+     * @param pixels the image pixel matrix
+     *
+     * @throws IOException if an I/O error occurs during writing
+     */
     private void writeByteSizePixels(DataOutputStream pixelStream, int[][][]pixels) throws IOException{
         int rows = pixels.length, columns = pixels[0].length, channels = pixels[0][0].length;
 
@@ -57,6 +104,17 @@ public class NetpbmOutputStream extends NetpbmOutput {
         }
     }
 
+    /**
+     * Writes short-sized pixel values.
+     *
+     * <p>This method is used for images with
+     * {@code maxPixelValue >= 256}.</p>
+     *
+     * @param pixelStream the binary output stream
+     * @param pixels the image pixel matrix
+     *
+     * @throws IOException if an I/O error occurs during writing
+     */
     private void writeShortSizePixels(DataOutputStream pixelStream, int[][][]pixels) throws IOException{
         int rows = pixels.length, columns = pixels[0].length, channels = pixels[0][0].length;
 
@@ -69,6 +127,14 @@ public class NetpbmOutputStream extends NetpbmOutput {
         }
     }
 
+    /**
+     * Converts a 3D single-channel pixel matrix
+     * into a 2D bit matrix.
+     *
+     * @param unpackedPixels the source 3D pixel matrix
+     *
+     * @return a 2D pixel matrix
+     */
     private int[][] convertTo2D(int[][][] unpackedPixels){
         int rows = unpackedPixels.length, columns = unpackedPixels[0].length;
 

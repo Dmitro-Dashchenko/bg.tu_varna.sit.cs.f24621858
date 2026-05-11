@@ -39,7 +39,7 @@ public class GrayscaleTransformation implements Transformation {
     public NetpbmFormatImage apply(NetpbmFormatImage image) {
         MagicWord magicWord = image.getMagicWord(), newMagicWord;
 
-        if (!(magicWord == MagicWord.P3 || magicWord == MagicWord.P6))
+        if (magicWord != MagicWord.P3 && magicWord != MagicWord.P6)
             return image;
 
         if(magicWord == MagicWord.P3)

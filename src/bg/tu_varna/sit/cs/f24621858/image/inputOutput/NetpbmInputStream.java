@@ -89,7 +89,7 @@ public class NetpbmInputStream extends NetpbmInput {
 
         int bytesColumns = (columns +7)/8;
 
-        int [][] twoDimPixels = new int[rows][columns];
+        int [][] twoDimPixels = new int[rows][bytesColumns];
 
         int [][][] threeDimPixels;
 
@@ -99,7 +99,7 @@ public class NetpbmInputStream extends NetpbmInput {
             }
         }
 
-        twoDimPixels = ByteArchiver.unpack(twoDimPixels, rows);
+        twoDimPixels = ByteArchiver.unpack(twoDimPixels, columns);
 
         threeDimPixels = convertTo3D(twoDimPixels);
 
@@ -124,7 +124,7 @@ public class NetpbmInputStream extends NetpbmInput {
 
         int rows = image.getHeight(), columns = image.getWidth(), channels = image.getChannels();
 
-        int[][][] pixels = new int[image.getHeight()][image.getHeight()][image.getChannels()];
+        int[][][] pixels = new int[image.getHeight()][image.getWidth()][image.getChannels()];
 
         for(int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {

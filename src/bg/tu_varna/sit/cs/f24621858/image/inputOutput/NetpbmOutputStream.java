@@ -98,7 +98,7 @@ public class NetpbmOutputStream extends NetpbmOutput {
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < columns; j++){
                 for(int k = 0; k < channels; k++) {
-                    pixelStream.write(pixels[i][j][k]);
+                    pixelStream.writeByte(pixels[i][j][k]);
                 }
             }
         }
@@ -118,8 +118,8 @@ public class NetpbmOutputStream extends NetpbmOutput {
     private void writeShortSizePixels(DataOutputStream pixelStream, int[][][]pixels) throws IOException{
         int rows = pixels.length, columns = pixels[0].length, channels = pixels[0][0].length;
 
-        for(int i = 0; i < pixels.length; i++){
-            for(int j = 0; j < pixels[0].length; j++){
+        for(int i = 0; i < rows; i++){
+            for(int j = 0; j <columns; j++){
                 for(int k = 0; k < channels; k++) {
                     pixelStream.writeShort(pixels[i][j][k]);
                 }

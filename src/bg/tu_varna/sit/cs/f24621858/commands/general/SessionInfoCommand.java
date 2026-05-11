@@ -4,11 +4,6 @@ import bg.tu_varna.sit.cs.f24621858.commands.Command;
 import bg.tu_varna.sit.cs.f24621858.commands.Session;
 import bg.tu_varna.sit.cs.f24621858.commands.SessionManager;
 import bg.tu_varna.sit.cs.f24621858.commands.SessionNullPointerException;
-import bg.tu_varna.sit.cs.f24621858.commands.imageRedactor.Transformation;
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
-
-import java.util.List;
-import java.util.StringJoiner;
 
 /**
  * Displays a summary of the currently active editing session.

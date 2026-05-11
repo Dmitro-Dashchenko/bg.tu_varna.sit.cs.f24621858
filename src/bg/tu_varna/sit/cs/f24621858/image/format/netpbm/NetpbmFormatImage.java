@@ -1,6 +1,5 @@
 package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
 
-import bg.tu_varna.sit.cs.f24621858.image.exceptions.EmptyFileNameException;
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
 
 import bg.tu_varna.sit.cs.f24621858.image.format.Image;

@@ -1,7 +1,5 @@
 package bg.tu_varna.sit.cs.f24621858.commands.imageRedactor;
 
-import bg.tu_varna.sit.cs.f24621858.image.format.PixelFormat;
-
 /**
  * Enumerates all available directions for raster graphic editor commands
  * {@link CollageCommand} and {@link RotateTransformation}

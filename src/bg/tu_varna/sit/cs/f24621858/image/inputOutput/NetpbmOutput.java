@@ -89,7 +89,7 @@ public abstract class NetpbmOutput extends ImageOutput{
                 headerToStringBuilder.append(image.getMagicWord().toString()).append('\n').append(image.getWidth()).append(' ').append(image.getHeight()).append('\n').append(image.getMaxPixelValue()).append('\n');
                 break;
             case P3, P6:
-                headerToStringBuilder.append(image.getMagicWord().toString()).append('\n').append(image.getWidth() / 3).append(' ').append(image.getHeight()).append('\n').append(image.getMaxPixelValue()).append('\n');
+                headerToStringBuilder.append(image.getMagicWord().toString()).append('\n').append(image.getWidth()).append(' ').append(image.getHeight()).append('\n').append(image.getMaxPixelValue()).append('\n');
                 break;
             default:
                 throw new InvalidImageDataException("Invalid magic word");

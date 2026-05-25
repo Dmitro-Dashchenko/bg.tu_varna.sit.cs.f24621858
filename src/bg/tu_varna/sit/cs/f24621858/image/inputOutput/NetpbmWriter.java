@@ -66,7 +66,7 @@ public class NetpbmWriter extends NetpbmOutput{
     private void writeASCIIPixels(BufferedWriter pixelsWriter) throws IOException{
         StringBuilder pixelsAsStringBuilder = new StringBuilder();
 
-        int[][][]pixels = image.getPixels();
+        int[][][]pixels = image.toPixelArray();
         int rows = image.getHeight(), columns = image.getWidth(), channels= image.getChannels();
 
         for (int i = 0; i < rows; i++) {

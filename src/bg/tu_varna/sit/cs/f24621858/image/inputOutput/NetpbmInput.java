@@ -2,8 +2,7 @@ package bg.tu_varna.sit.cs.f24621858.image.inputOutput;
 
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.EmptyFileNameException;
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.MagicWord;
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
+import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.*;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -70,7 +69,7 @@ public abstract class NetpbmInput extends ImageInput{
 
             imagePixels = readBody(fileImageStream);
 
-            image.setPixels(imagePixels);
+            image.getPixelsFromArray(imagePixels);
         }
         catch(FileNotFoundException e){
             throw new FileNotFoundException("Exception occurred: file wasn't found");
@@ -181,13 +180,13 @@ public abstract class NetpbmInput extends ImageInput{
 
         switch(magicWord){
             case P1, P4:
-                image = new NetpbmFormatImage(objectPath, magicWord, headerScanner.nextInt(), headerScanner.nextInt(),(short)1, 1);
+                image = new PBM(objectPath, magicWord, headerScanner.nextInt(), headerScanner.nextInt());
                 break;
             case P2, P5:
-                image = new NetpbmFormatImage(objectPath, magicWord, headerScanner.nextInt(), headerScanner.nextInt(), headerScanner.nextShort(), 1);
+                image = new PGM(objectPath, magicWord, headerScanner.nextInt(), headerScanner.nextInt(), headerScanner.nextShort());
                 break;
             case P3, P6:
-                image = new NetpbmFormatImage(objectPath, magicWord, headerScanner.nextInt() , headerScanner.nextInt(), headerScanner.nextShort(), 3);
+                image = new PPM(objectPath, magicWord, headerScanner.nextInt() , headerScanner.nextInt(), headerScanner.nextShort());
                 break;
             default:
                 throw new IllegalArgumentException("Invalid magic word");

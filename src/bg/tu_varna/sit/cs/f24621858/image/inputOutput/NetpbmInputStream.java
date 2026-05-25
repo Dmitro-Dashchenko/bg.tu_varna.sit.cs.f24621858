@@ -46,7 +46,7 @@ public class NetpbmInputStream extends NetpbmInput {
     protected int[][][] getPixels(FileInputStream fileImageStream, NetpbmFormatImage image) throws EOFException, IOException{
         int[][][] pixels;
 
-        int rows = image.getHeight(), columns = image.getWidth(), channels = image.getChannels();
+        int rows = image.getHeight(), columns = image.getWidth();
 
         int maxPixelValue = image.getMaxPixelValue();
 

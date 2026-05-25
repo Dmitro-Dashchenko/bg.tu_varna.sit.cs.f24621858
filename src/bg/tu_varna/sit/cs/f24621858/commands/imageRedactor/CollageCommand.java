@@ -5,7 +5,12 @@ import bg.tu_varna.sit.cs.f24621858.commands.Session;
 import bg.tu_varna.sit.cs.f24621858.commands.SessionManager;
 import bg.tu_varna.sit.cs.f24621858.commands.SessionNullPointerException;
 import bg.tu_varna.sit.cs.f24621858.commands.general.SaveCommand;
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
+import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
+import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.Pixel;
+import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Creates a collage from two images already present in the current session
@@ -171,76 +176,67 @@ public class CollageCommand implements Command {
      * @param collageName the name/path to assign to the new image
      * @return the combined horizontal collage image
      */
-    private NetpbmFormatImage collageHorizontal(NetpbmFormatImage firstImage, NetpbmFormatImage secondImage, String collageName) {
+    private NetpbmFormatImage collageHorizontal(NetpbmFormatImage firstImage,
+                                                NetpbmFormatImage secondImage,
+                                                String collageName) {
         int height   = firstImage.getHeight();
-        int width1   = firstImage.getWidth(), width2   = secondImage.getWidth();
+        int width1   = firstImage.getWidth();
+        int width2   = secondImage.getWidth();
         int newWidth = width1 + width2;
-        int channels = firstImage.getChannels();
         int maxVal   = Math.max(firstImage.getMaxPixelValue(), secondImage.getMaxPixelValue());
 
-        int[][][] src1   = firstImage.getPixels(), src2 = secondImage.getPixels();
+        List<Pixel> src1   = firstImage.getPixels();
 
-        int[][][] result = new int[height][newWidth][channels];
+        List<Pixel> src2   = secondImage.getPixels();
+        List<Pixel> result = new ArrayList<>(height * newWidth);
 
         for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width1; j++) {
-                for (int k = 0; k < channels; k++) {
-                    result[i][j][k] = src1[i][j][k];
-                }
-            }
-
-            for (int j = 0; j < width2; j++) {
-                for (int k = 0; k < channels; k++) {
-                    result[i][width1 + j][k] = src2[i][j][k];
-                }
-
-            }
+            for (int j = 0; j < width1; j++)
+                result.add(src1.get(i * width1 + j));
+            for (int j = 0; j < width2; j++)
+                result.add(src2.get(i * width2 + j));
         }
 
-        NetpbmFormatImage out = new NetpbmFormatImage(collageName, firstImage.getMagicWord(), newWidth, height, maxVal, channels);
-        out.setPixels(result);
-        return out;
+        return buildImage(collageName, firstImage.getMagicWord(), newWidth, height, maxVal, result);
     }
 
     /**
-     * Builds a vertical collage: {@code firstImage} on top, {@code secondImage} below.
-     *
-     * @param firstImage        top image; widths must match
-     * @param secondImage        bottom image; widths must match
-     * @param collageName the name/path to assign to the new image
-     * @return the combined vertical collage image
+     * Builds a vertical collage: {@code first} on top, {@code second} below.
+     * The pixel lists are simply concatenated.
      */
-    private NetpbmFormatImage collageVertical(NetpbmFormatImage firstImage, NetpbmFormatImage secondImage, String collageName) {
-        int width     = firstImage.getWidth();
-        int height1   = firstImage.getHeight();
-        int height2   = secondImage.getHeight();
-        int newHeight = height1 + height2;
-        int channels  = firstImage.getChannels();
-        int maxVal    = Math.max(firstImage.getMaxPixelValue(), secondImage.getMaxPixelValue());
+    private NetpbmFormatImage collageVertical(NetpbmFormatImage first,
+                                              NetpbmFormatImage second,
+                                              String name) {
+        int width     = first.getWidth();
+        int newHeight = first.getHeight() + second.getHeight();
+        int maxVal    = Math.max(first.getMaxPixelValue(), second.getMaxPixelValue());
 
-        int[][][] src1   = firstImage.getPixels();
-        int[][][] src2   = secondImage.getPixels();
-        int[][][] result = new int[newHeight][width][channels];
+        List<Pixel> result = new ArrayList<>(newHeight * width);
+        result.addAll(first.getPixels());
+        result.addAll(second.getPixels());
 
-        for (int i = 0; i < height1; i++) {
-            for (int j = 0; j < width; j++) {
-                for (int k = 0; k < channels; k++) {
-                    result[i][j][k] = src1[i][j][k];
-                }
+        return buildImage(name, first.getMagicWord(), width, newHeight, maxVal, result);
+    }
+
+    /**
+     * Instantiates the correct concrete {@link NetpbmFormatImage} subclass.
+     */
+    private NetpbmFormatImage buildImage(String name, MagicWord mw,
+                                         int width, int height, int maxVal,
+                                         List<Pixel> pixels) {
+        try {
+            NetpbmFormatImage img;
+            switch (mw) {
+                case P1: case P4: img = new PBM(name, mw, width, height); break;
+                case P2: case P5: img = new PGM(name, mw, width, height, maxVal); break;
+                case P3: case P6: img = new PPM(name, mw, width, height, maxVal); break;
+                default: throw new IllegalArgumentException("Unknown magic word: " + mw);
             }
+            img.setPixels(pixels);
+            return img;
+        } catch (InvalidImageDataException e) {
+            throw new RuntimeException("Unexpected error building collage image", e);
         }
-
-        for (int i = 0; i < height2; i++) {
-            for (int j = 0; j < width; j++) {
-                for (int k = 0; k < channels; k++) {
-                    result[height1 + i][j][k] = src2[i][j][k];
-                }
-            }
-        }
-
-        NetpbmFormatImage resultImage = new NetpbmFormatImage(collageName, firstImage.getMagicWord(), width, newHeight, maxVal, channels);
-        resultImage.setPixels(result);
-        return resultImage;
     }
 
     /**

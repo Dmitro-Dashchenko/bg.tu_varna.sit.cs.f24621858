@@ -3,12 +3,15 @@ package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
 
 import bg.tu_varna.sit.cs.f24621858.image.format.Image;
-import bg.tu_varna.sit.cs.f24621858.image.format.PixelFormat;
+import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.*;
 import bg.tu_varna.sit.cs.f24621858.image.inputOutput.NetpbmHeaderTokenizer;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -28,7 +31,7 @@ import java.util.Objects;
  * @see PixelFormat
  * @see <a href="https://en.wikipedia.org/wiki/Netpbm_format">Netpbm format – Wikipedia</a>
  */
-public class NetpbmFormatImage extends Image /*implements Cloneable*/{
+public abstract class NetpbmFormatImage extends Image /*implements Cloneable*/{
 
     /** Format variant of this image. */
     private MagicWord magicWord;
@@ -37,7 +40,7 @@ public class NetpbmFormatImage extends Image /*implements Cloneable*/{
      * Maximum value a single channel can hold.
      * Fixed at {@code 1} for PBM (P1/P4); user-defined for PGM/PPM (1–65535).
      */
-    protected final int maxPixelValue;
+    protected int maxPixelValue;
 
     /**
      * Constructs a {@code NetpbmFormatImage} with all required metadata.
@@ -46,21 +49,20 @@ public class NetpbmFormatImage extends Image /*implements Cloneable*/{
      * @param magicWord     Netpbm format variant (P1–P6)
      * @param width         image width in pixels
      * @param height        image height in pixels
-     * @param maxPixelValue maximum channel value; must be in {@code [0, 65535]}
-     * @param channels      number of bytes in one pixel
+     * /*@param maxPixelValue maximum channel value; must be in {@code [0, 65535]}
+     * /*@param channels      number of bytes in one pixel
      * @throws InvalidImageDataException if {@code maxPixelValue} is outside the
      *                                   valid range or the base class validation fails
      */
-    public NetpbmFormatImage(String name, MagicWord magicWord, int width, int height, int maxPixelValue, int channels) throws InvalidImageDataException {
-        super(name, width, height, channels);
+    public NetpbmFormatImage(String name, MagicWord magicWord, int width, int height/*int maxPixelValue, int channels*/) throws InvalidImageDataException {
+        super(name, width, height/*, channels*/);
 
         this.magicWord = magicWord;
 
-        if(maxPixelValue < 0 || maxPixelValue > 65535)
+       /* if(maxPixelValue < 0 || maxPixelValue > 65535)
             throw new InvalidImageDataException("Value is out of range");
         else
-            setMaxPixelValue(this.magicWord, maxPixelValue);
-
+            setMaxPixelValue(this.magicWord, maxPixelValue);*/
     }
 
     /**
@@ -71,7 +73,7 @@ public class NetpbmFormatImage extends Image /*implements Cloneable*/{
      * @param magicWord     format variant
      * @param maxPixelValue candidate value from the file header
      */
-    private void setMaxPixelValue(MagicWord magicWord, int maxPixelValue){
+    /*protected void setMaxPixelValue(MagicWord magicWord, int maxPixelValue){
         switch(magicWord){
             case P1,P4:
                 this.maxPixelValue = 1;
@@ -80,7 +82,7 @@ public class NetpbmFormatImage extends Image /*implements Cloneable*/{
                 this.maxPixelValue = maxPixelValue;
                 break;
         }
-    }
+    }*/
 
     /**
      * Returns the format variant (magic word) of this image.
@@ -137,6 +139,78 @@ public class NetpbmFormatImage extends Image /*implements Cloneable*/{
     }
 
     /**
+     * Populates the pixel list from a legacy {@code int[height][width][channels]}
+     * array.  The correct {@link Pixel} subtype is chosen based on the image's
+     * magic word and {@code maxPixelValue}:
+     * <ul>
+     *   <li>P1 / P4 → {@link MonochromePixel}</li>
+     *   <li>P2 / P5 → {@link LuminancePixel}</li>
+     *   <li>P3 / P6, maxVal ≤ 255 → {@link RGB8Pixel}</li>
+     *   <li>P3 / P6, maxVal  > 255 → {@link RGB16Pixel}</li>
+     * </ul>
+     *
+     * @param pixelArray source array {@code [height][width][channels]}
+     * @return {@code this} (fluent API)
+     */
+    public NetpbmFormatImage getPixelsFromArray(int[][][] pixelArray) {
+        List<Pixel> list = new ArrayList<>(height * width);
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                int[] ch = pixelArray[i][j];
+                Pixel pixel = createPixel(ch);
+                list.add(pixel);
+            }
+        }
+
+        this.pixels = list;
+        return this;
+    }
+
+    /**
+     * Creates the appropriate {@link Pixel} subtype for a single raw channel array.
+     *
+     * @param ch raw channel values; length must match the expected channel count
+     * @return a typed {@link Pixel} instance
+     */
+    private Pixel createPixel(int[] ch) {
+        switch (magicWord) {
+            case P1: case P4:
+                return new MonochromePixel(ch[0]);
+            case P2: case P5:
+                return new LuminancePixel(ch[0]);
+            case P3: case P6:
+            default:
+                if (maxPixelValue <= 255) {
+                    return new RGB8Pixel(ch[0], ch[1], ch[2]);
+                } else {
+                    return new RGB16Pixel(ch[0], ch[1], ch[2]);
+                }
+        }
+    }
+
+    /**
+     * Converts the pixel list back to a {@code int[height][width][channels]}
+     * array for compatibility with existing I/O code.
+     *
+     * @return raw pixel array
+     */
+    public int[][][] toPixelArray() {
+        List<Pixel> pixList = getPixels();
+        int h = height;
+        int w = width;
+        if (pixList == null || pixList.isEmpty()) return new int[0][0][0];
+        int c = getChannels();
+        int[][][] raw = new int[h][w][c];
+        for (int i = 0; i < h; i++) {
+            for (int j = 0; j < w; j++) {
+                raw[i][j] = pixList.get(i * w + j).toArray();
+            }
+        }
+        return raw;
+    }
+
+    /**
      * Two {@code NetpbmFormatImage} objects are equal when their base-class
      * fields (name, width, height), magic word, and maximum pixel value are all
      * identical.
@@ -174,7 +248,7 @@ public class NetpbmFormatImage extends Image /*implements Cloneable*/{
      */
     @Override
     public String toString() {
-        return String.format("%s, magic word:%s, max pixel value:%d, channels: %d", super.toString(), magicWord.toString(), maxPixelValue, channels);
+        return String.format("%s, magic word:%s, max pixel value:%d", super.toString(), magicWord.toString(), maxPixelValue);
     }
 
 }

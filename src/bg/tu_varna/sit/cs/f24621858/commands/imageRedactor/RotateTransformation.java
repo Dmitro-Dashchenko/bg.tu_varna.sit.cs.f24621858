@@ -1,6 +1,11 @@
 package bg.tu_varna.sit.cs.f24621858.commands.imageRedactor;
 
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
+import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
+import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.Pixel;
+import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Rotates an image by exactly 90 degrees left (counter-clockwise) or
@@ -50,35 +55,47 @@ public class RotateTransformation implements Transformation {
 
     @Override
     public NetpbmFormatImage apply(NetpbmFormatImage image) {
+        int newWidth  = image.getHeight();   // dimensions swap after rotation
         int newHeight = image.getWidth();
-        int newWidth  = image.getHeight();
 
-        int[][][] result = setRotation(image);
+        List<Pixel> rotated = setRotation(image, newWidth, newHeight);
 
-        NetpbmFormatImage out = new NetpbmFormatImage(image.getName(), image.getMagicWord(), newWidth, newHeight, image.getMaxPixelValue(), image.getChannels());
-        out.setPixels(result);
-        return out;
+        try {
+            NetpbmFormatImage out = cloneStructure(image, newWidth, newHeight);
+            out.setPixels(rotated);
+            return out;
+        } catch (InvalidImageDataException e) {
+            throw new RuntimeException("Unexpected error creating rotated image", e);
+        }
     }
 
     /**
-     * Computes the rotated pixel array using the coordinate-transformation
-     * formulas for the configured direction.
-     * All {@code channels} values are copied atomically per pixel.
+     * Computes the rotated pixel list using coordinate-transformation formulas.
      *
-     * @param image the source image providing dimensions, channels and pixel data
-     * @return the rotated pixel array
-     *         {@code int[oldWidth][oldHeight][channels]}
+     * <p>For a pixel originally at {@code (row, col)} in an
+     * {@code oldHeight × oldWidth} image:
+     * <ul>
+     *   <li><b>LEFT</b>:  {@code newRow = oldWidth-1-col}, {@code newCol = row}</li>
+     *   <li><b>RIGHT</b>: {@code newRow = col},            {@code newCol = oldHeight-1-row}</li>
+     * </ul>
+     * Result dimensions are {@code newHeight × newWidth} (oldWidth × oldHeight).
+     *
+     * @param image     source image
+     * @param newWidth  width of the output image (= old height)
+     * @param newHeight height of the output image (= old width)
+     * @return flat pixel list in row-major order for the rotated image
      */
-    private int[][][] setRotation(NetpbmFormatImage image) {
-        int oldHeight  = image.getHeight();
-        int oldWidth = image.getWidth();
-        int channels = image.getChannels();
+    private List<Pixel> setRotation(NetpbmFormatImage image, int newWidth, int newHeight) {
+        int oldHeight = image.getHeight();
+        int oldWidth  = image.getWidth();
 
-        int[][][] sourcePixels = image.getPixels();
-        int[][][] result = new int[oldWidth][oldHeight][channels];
+        List<Pixel> source = image.getPixels();
+        // Pre-allocate with nulls so we can set by index
+        Pixel[] result = new Pixel[newWidth * newHeight];
 
         for (int i = 0; i < oldHeight; i++) {
             for (int j = 0; j < oldWidth; j++) {
+                Pixel p = source.get(i * oldWidth + j);
                 int newRow, newCol;
                 if (direction == Direction.LEFT) {
                     newRow = oldWidth - 1 - j;
@@ -87,13 +104,31 @@ public class RotateTransformation implements Transformation {
                     newRow = j;
                     newCol = oldHeight - 1 - i;
                 }
-                for (int k = 0; k < channels; k++) {
-                    result[newRow][newCol][k] = sourcePixels[i][j][k];
-                }
+                result[newRow * newWidth + newCol] = p;
             }
         }
 
-        return result;
+        List<Pixel> list = new ArrayList<>(result.length);
+        for (Pixel p : result) list.add(p);
+        return list;
+    }
+
+    /**
+     * Builds a new empty {@link NetpbmFormatImage} with the same metadata as
+     * the source but with swapped dimensions.
+     */
+    private NetpbmFormatImage cloneStructure(NetpbmFormatImage image, int newWidth, int newHeight)
+            throws InvalidImageDataException {
+        MagicWord mw = image.getMagicWord();
+        String name   = image.getName();
+        int max = image.getMaxPixelValue();
+
+        switch (mw) {
+            case P1: case P4: return new PBM(name, mw, newWidth, newHeight);
+            case P2: case P5: return new PGM(name, mw, newWidth, newHeight, max);
+            case P3: case P6: return new PPM(name, mw, newWidth, newHeight, max);
+            default: throw new InvalidImageDataException("Unknown magic word: " + mw);
+        }
     }
 
     /**

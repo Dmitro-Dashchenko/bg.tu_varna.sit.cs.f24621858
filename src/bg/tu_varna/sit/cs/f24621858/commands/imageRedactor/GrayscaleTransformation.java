@@ -1,8 +1,14 @@
 package bg.tu_varna.sit.cs.f24621858.commands.imageRedactor;
 
 
+import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.LuminancePixel;
+import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.Pixel;
 import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.MagicWord;
 import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
+import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.PGM;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Converts a colour (PPM) image to greyscale (PGM).
@@ -47,39 +53,35 @@ public class GrayscaleTransformation implements Transformation {
         else
             newMagicWord = MagicWord.P5;
 
-        int[][][] scaledPixels = setGrayscale(image);
+        List<Pixel> scaledPixels = setGrayscale(image);
 
-        NetpbmFormatImage resultImage = new NetpbmFormatImage(image.getName(), newMagicWord, image.getWidth(), image.getHeight(), image.getMaxPixelValue(), 1);
-
-        resultImage.setPixels(scaledPixels);
-
-        return resultImage;
+        try {
+            PGM result = new PGM(image.getName(), newMagicWord,
+                    image.getWidth(), image.getHeight(), image.getMaxPixelValue());
+            result.setPixels(scaledPixels);
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected error creating PGM image", e);
+        }
     }
 
     /**
-     * Computes the greyscale luminance for every pixel using the
-     * Y = round( 0.299 × R  +  0.587 × G  +  0.114 × B ) formula.
+     * Computes the greyscale luminance for every pixel using the BT.601 formula.
      *
      * @param image the source colour image (P3 or P6)
-     * @return a new {@code int[height][width][1]} array with greyscale values
+     * @return a flat {@code List<Pixel>} of {@link LuminancePixel} instances
      */
-    private int[][][] setGrayscale(NetpbmFormatImage image){
-        int rows = image.getHeight(), columns  = image.getWidth();
+    private List<Pixel> setGrayscale(NetpbmFormatImage image) {
+        List<Pixel> source = image.getPixels();
+        List<Pixel> result = new ArrayList<>(source.size());
 
-        int[][][] sourcePixels = image.getPixels();
-
-        int[][][] scaledPixels = new int[rows][columns][1];
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                int r = sourcePixels[i][j][0];
-                int g = sourcePixels[i][j][1];
-                int b = sourcePixels[i][j][2];
-                scaledPixels[i][j][0] = (int) Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-            }
+        for (Pixel p : source) {
+            int[] ch = p.toArray();
+            int y = (int) Math.round(0.299 * ch[0] + 0.587 * ch[1] + 0.114 * ch[2]);
+            result.add(new LuminancePixel(y));
         }
 
-        return scaledPixels;
+        return result;
     }
 
     /**

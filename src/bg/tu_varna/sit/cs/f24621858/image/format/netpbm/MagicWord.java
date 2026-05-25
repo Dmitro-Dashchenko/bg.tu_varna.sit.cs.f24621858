@@ -1,6 +1,6 @@
 package bg.tu_varna.sit.cs.f24621858.image.format.netpbm;
 
-import bg.tu_varna.sit.cs.f24621858.image.format.PixelFormat;
+import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.PixelFormat;
 
 /**
  * Enumerates all six magic words defined by the Netpbm image format standard.

@@ -1,8 +1,10 @@
 package bg.tu_varna.sit.cs.f24621858.image.format;
 
 import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
+import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.Pixel;
 
-import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -33,13 +35,15 @@ public abstract class Image {
     protected int height;
 
     /**Channels of the image*/
-    protected int channels;
+    /*protected int channels;*/
 
     /**
      * Three-dimensional pixel data array laid out as
      * {@code [height][width][channels]}.
      */
-    protected int[][][] pixels;
+    /*protected int[][][] pixels;*/
+
+    protected List<Pixel> pixels;
 
     /**
      * Constructs a new {@code Image} with the given name and dimensions.
@@ -47,11 +51,11 @@ public abstract class Image {
      * @param name   the file path or logical name; must not be {@code null}
      * @param width  image width in pixels; must be &ge; 0
      * @param height image height in pixels; must be &ge; 0
-     * @param channels bytes in one pixel; must be equal 1 or 3
+     * /*@param channels bytes in one pixel; must be equal 1 or 3
      * @throws InvalidImageDataException if {@code name} is {@code null} or
      *                                   either dimension is negative
      */
-    public Image(String name, int width, int height, int channels) throws InvalidImageDataException {
+    public Image(String name, int width, int height/*, int channels*/) throws InvalidImageDataException {
         if(Objects.equals(name,null))
             throw new InvalidImageDataException("Image name can`t be empty");
         else
@@ -65,10 +69,11 @@ public abstract class Image {
             this.height = height;
         }
 
-        this.channels = channels;
+        /*this.channels = channels;*/
 
-        if(width != 0 && height != 0 && channels != 0)
-            this.pixels = new int[height][width][channels];
+        if(width == 0 && height == 0/* && channels == 0*/)
+            throw new InvalidImageDataException("Image must have at least one pixel");
+            /*this.pixels = new int[height][width][channels];*/
     }
 
     /**
@@ -98,22 +103,11 @@ public abstract class Image {
         this.height = height;
     }
 
-    /**
-     * Sets the number of channels of this image.
-     *
-     * @param channels new height
-     */
-    public void setChannels(int channels){
-        this.channels = channels;
+    public List<Pixel> getPixels() {
+        return pixels;
     }
 
-    /**
-     * Replaces the pixel data of this image.
-     *
-     * @param pixels new pixel array in {@code [height][width][channels]} layout
-     */
-
-    public void setPixels(int[][][] pixels){
+    public void setPixels(List<Pixel> pixels) {
         this.pixels = pixels;
     }
 
@@ -149,45 +143,18 @@ public abstract class Image {
      *
      * @return image channels
      */
-    public int getChannels() {
-        return channels;
-    }
+    public abstract int getChannels();
 
-    /**
-     * Returns the pixel data array in {@code [height][width][channels]} layout.
-     *
-     * @return pixel array; may be {@code null} if pixels have not been set yet
-     */
-    public int[][][] getPixels(){
-        return pixels;
-    }
 
-    /**
-     * Two images are considered equal when their names, widths, and heights
-     * are identical.  Pixel data is intentionally excluded from this comparison.
-     *
-     * @param o the object to compare
-     * @return {@code true} if both images share the same name and dimensions
-     */
     @Override
-    public boolean equals(Object o){
-        if(o == this)return true;
-
-        if(!(o instanceof Image)) return false;
-
-        Image image = (Image) o;
-
-        return this.getName().equals(image.getName()) && this.getWidth() == image.getWidth() && this.getHeight() == image.getHeight();
+    public boolean equals(Object o) {
+        if (!(o instanceof Image image)) return false;
+        return width == image.width && height == image.height && Objects.equals(name, image.name) && Objects.equals(pixels, image.pixels);
     }
 
-    /**
-     * Returns a hash code based on name, dimensions, and pixel data.
-     *
-     * @return hash code
-     */
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getWidth(), getHeight(), Arrays.deepHashCode(getPixels()));
+        return Objects.hash(name, width, height, pixels);
     }
 
     /**
@@ -195,7 +162,6 @@ public abstract class Image {
      *
      * @return string in the form {@code "<name> image, width:<w>, height:<h>"}
      */
-
     @Override
     public String toString(){
         return  String.format("%s image, width:%d, height:%d", getName(), getWidth(), getHeight());

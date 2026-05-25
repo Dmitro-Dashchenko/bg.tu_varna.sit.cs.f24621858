@@ -48,13 +48,13 @@ public class NetpbmOutputStream extends NetpbmOutput {
         DataOutputStream pixelOutputStream = new DataOutputStream(bodyOutputStream);
 
         if (image.getMagicWord() == MagicWord.P4)
-            writeBitSizePixels(pixelOutputStream, image.getPixels());
+            writeBitSizePixels(pixelOutputStream, image.toPixelArray());
 
         else if (image.getMaxPixelValue() < 256)
-            writeByteSizePixels(pixelOutputStream, image.getPixels());
+            writeByteSizePixels(pixelOutputStream, image.toPixelArray());
 
         else
-            writeShortSizePixels(pixelOutputStream, image.getPixels());
+            writeShortSizePixels(pixelOutputStream, image.toPixelArray());
     }
 
     /**

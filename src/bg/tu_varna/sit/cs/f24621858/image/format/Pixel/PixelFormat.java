@@ -1,13 +1,9 @@
-package bg.tu_varna.sit.cs.f24621858.image.format;
-
-import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.MagicWord;
+package bg.tu_varna.sit.cs.f24621858.image.format.Pixel;
 
 /**
  * Enumerates the two pixel-data encoding formats used by the Netpbm family.
  *
  * @author Dmitro Dashchenko
- *
- * @see MagicWord
  */
 public enum PixelFormat {
 

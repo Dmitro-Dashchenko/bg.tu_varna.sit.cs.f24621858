@@ -1,7 +1,13 @@
 package bg.tu_varna.sit.cs.f24621858.commands.imageRedactor;
 
+import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.MonochromePixel;
+import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.Pixel;
 import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.MagicWord;
 import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.NetpbmFormatImage;
+import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.PBM;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Converts an image to monochrome (PBM – only pure black and white pixels).
@@ -44,39 +50,39 @@ public class MonochromeTransformation implements Transformation {
         else
             newMagicWord = MagicWord.P4;
 
-        int[][][] scaledPixels = setMonochrome(image);
+        List<Pixel> scaledPixels = setMonochrome(image);
 
-        NetpbmFormatImage out = new NetpbmFormatImage(image.getName(), newMagicWord, image.getWidth(), image.getHeight(), 1, 1);
-        out.setPixels(scaledPixels);
-        return out;
+        try {
+            PBM out = new PBM(image.getName(), newMagicWord, image.getWidth(), image.getHeight());
+            out.setPixels(scaledPixels);
+            return out;
+        } catch (Exception e) {
+            // Should never happen because newMagicWord is always P1 or P4
+            throw new RuntimeException("Unexpected error creating PBM image", e);
+        }
     }
-
 
     /**
      * Applies a threshold to every greyscale pixel, producing 0 (white) or
      * 1 (black) according to the PBM convention.
      *
      * <p>The threshold is computed as {@code maxPixelValue / 2} using integer
-     * division (e.g. 127 for an 8-bit image with max value = 255).
+     * division (e.g. 127 for an 8-bit image with max value 255).
      *
-     * @param image a greyscale image (already converted from colour if
-     *              necessary); must not be {@code null}
-     * @return a new {@code int[height][width][1]} array of 0/1 values
+     * @param image a greyscale image (already converted from colour if necessary)
+     * @return a flat {@code List<Pixel>} of {@link MonochromePixel} instances
      */
-    private int[][][] setMonochrome(NetpbmFormatImage image) {
-        int rows = image.getHeight(), columns  = image.getWidth();
-        int threshold =  image.getMaxPixelValue() / 2;
+    private List<Pixel> setMonochrome(NetpbmFormatImage image) {
+        int threshold = image.getMaxPixelValue() / 2;
+        List<Pixel> source = image.getPixels();
+        List<Pixel> result = new ArrayList<>(source.size());
 
-        int[][][] sourcePixels = image.getPixels();
-        int[][][] scaledPixels = new int[rows][columns][1];
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                scaledPixels[i][j][0] = (sourcePixels[i][j][0] > threshold) ? 0 : 1;
-            }
+        for (Pixel p : source) {
+            int luminance = p.toArray()[0];
+            result.add(new MonochromePixel(luminance > threshold ? 0 : 1));
         }
 
-        return scaledPixels;
+        return result;
     }
 
     /**

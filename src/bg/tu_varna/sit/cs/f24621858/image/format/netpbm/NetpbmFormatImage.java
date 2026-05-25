@@ -37,7 +37,7 @@ public class NetpbmFormatImage extends Image /*implements Cloneable*/{
      * Maximum value a single channel can hold.
      * Fixed at {@code 1} for PBM (P1/P4); user-defined for PGM/PPM (1–65535).
      */
-    private int maxPixelValue;
+    protected final int maxPixelValue;
 
     /**
      * Constructs a {@code NetpbmFormatImage} with all required metadata.

@@ -3,10 +3,7 @@ package bg.tu_varna.sit.cs.f24621858.commands;
 import bg.tu_varna.sit.cs.f24621858.commands.general.*;
 import bg.tu_varna.sit.cs.f24621858.commands.imageRedactor.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Tokenizes a raw input line and dispatches the result to the appropriate
@@ -36,21 +33,7 @@ public class CommandParser {
 
     private final SessionManager sessionManager;
 
-    private final Command loadCommand;
-    private final Command addCommand;
-    private final Command closeCommand;
-    private final Command saveCommand;
-    private final Command saveAsCommand;
-    private final Command helpCommand;
-    private final Command exitCommand;
-    private final Command sessionInfoCommand;
-    private final Command switchCommand;
-    private final Command grayscaleCommand;
-    private final Command monochromeCommand;
-    private final Command negativeCommand;
-    private final Command rotateCommand;
-    private final Command undoCommand;
-    private final Command collageCommand;
+    private final Map<String,Command> commands;
 
     /**
      * Constructs a {@code CommandParser} and initialises all command instances.
@@ -61,21 +44,29 @@ public class CommandParser {
     public CommandParser(SessionManager sessionManager) {
         this.sessionManager = sessionManager;
 
-        loadCommand        = new LoadCommand(sessionManager);
-        addCommand         = new AddCommand(sessionManager);
-        closeCommand       = new CloseCommand(sessionManager);
-        saveCommand        = new SaveCommand(sessionManager);
-        saveAsCommand      = new SaveAsCommand(sessionManager);
-        helpCommand        = new HelpCommand();
-        exitCommand        = new ExitCommand();
-        sessionInfoCommand = new SessionInfoCommand(sessionManager);
-        switchCommand      = new SwitchCommand(sessionManager);
-        grayscaleCommand   = new GrayscaleCommand(sessionManager);
-        monochromeCommand  = new MonochromeCommand(sessionManager);
-        negativeCommand    = new NegativeCommand(sessionManager);
-        rotateCommand      = new RotateCommand(sessionManager);
-        undoCommand        = new UndoCommand(sessionManager);
-        collageCommand     = new CollageCommand(sessionManager);
+        commands = fillCommandMap();
+    }
+
+    private Map<String, Command> fillCommandMap(){
+        Map<String, Command> commandMap = new HashMap<>();
+
+        commandMap.put("load", new LoadCommand(sessionManager));
+        commandMap.put("add", new AddCommand(sessionManager));
+        commandMap.put("close", new CloseCommand(sessionManager));
+        commandMap.put("save", new SaveCommand(sessionManager));
+        commandMap.put("save as", new SaveAsCommand(sessionManager));
+        commandMap.put("help", new HelpCommand());
+        commandMap.put("exit", new ExitCommand());
+        commandMap.put("session info", new SessionInfoCommand(sessionManager));
+        commandMap.put("switch", new SwitchCommand(sessionManager));
+        commandMap.put("grayscale", new GrayscaleCommand(sessionManager));
+        commandMap.put("monochrome", new MonochromeCommand(sessionManager));
+        commandMap.put("negative", new NegativeCommand(sessionManager));
+        commandMap.put("rotate", new RotateCommand(sessionManager));
+        commandMap.put("undo", new UndoCommand(sessionManager));
+        commandMap.put("collage", new CollageCommand(sessionManager));
+
+        return commandMap;
     }
 
     /**
@@ -96,75 +87,31 @@ public class CommandParser {
         String[] args = Arrays.copyOfRange(tokens, 1, tokens.length);
 
         try{
-        switch (cmd) {
-            case "load":
-                loadCommand.execute(args);
-                break;
 
-            case "add":
-                addCommand.execute(args);
-                break;
-
-            case "close":
-                closeCommand.execute(args);
-                break;
-
-            case "save":
-                if (args.length > 0 && args[0].equalsIgnoreCase("as")) {
-                    saveAsCommand.execute(Arrays.copyOfRange(args, 1, args.length));
-                } else {
-                    saveCommand.execute(args);
-                }
-                break;
-
-            case "session":
-                if (args.length > 0 && args[0].equalsIgnoreCase("info")) {
-                    sessionInfoCommand.execute(new String[0]);
-                } else {
-                    System.out.println("Unknown session sub-command. Did you mean 'session info'?");
-                }
-                break;
-
-            case "switch":
-                switchCommand.execute(args);
-                break;
-
-            case "grayscale":
-                grayscaleCommand.execute(args);
-                break;
-
-            case "monochrome":
-                monochromeCommand.execute(args);
-                break;
-
-            case "negative":
-                negativeCommand.execute(args);
-                break;
-
-            case "rotate":
-                rotateCommand.execute(args);
-                break;
-
-            case "undo":
-                undoCommand.execute(args);
-                break;
-
-            case "collage":
-                collageCommand.execute(args);
-                break;
-
-            case "help":
-                helpCommand.execute(args);
-                break;
-
-            case "exit":
-                exitCommand.execute(args);
-                break;
-
-                default:
-                    System.out.println("Unknown command: \"" + cmd + "\". Type 'help' for a list of commands.");
+            switch(cmd){
+                case "save":
+                    if (args.length > 0 && args[0].equalsIgnoreCase("as")){
+                        cmd += " " + args[0].toLowerCase();
+                        args = Arrays.copyOfRange(args, 1, args.length);
+                    }
+                    break;
+                case "session":
+                    if (args.length > 0 && args[0].equalsIgnoreCase("info")) {
+                        cmd += " " + args[0].toLowerCase();
+                        args = new String[0];
+                    } else {
+                        System.out.println("Unknown session sub-command. Did you mean 'session info'?");
+                    }
                     break;
             }
+
+            if(!commands.containsKey(cmd)){
+                System.out.println("Unknown command: \"" + cmd + "\". Type 'help' for a list of commands.");
+                return;
+            }
+
+            commands.get(cmd).execute(args);
+
         } catch(SessionNullPointerException e) {
                 System.out.println(e.getMessage());
         }

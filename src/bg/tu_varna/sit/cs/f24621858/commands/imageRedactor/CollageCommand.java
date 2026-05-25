@@ -82,7 +82,7 @@ public class CollageCommand implements Command {
     @Override
     public void execute(String[] args) {
         if (args.length != 4) {
-            System.out.printf("Usage: collage %s|%s <image1> <image2> <collage path>\n", Direction.HORIZONTAL.toString().toLowerCase(), Direction.HORIZONTAL.toString().toLowerCase());
+            System.out.printf("Usage: collage %s|%s <image1> <image2> <collage path>\n", Direction.VERTICAL.toString().toLowerCase(), Direction.HORIZONTAL.toString().toLowerCase());
             return;
         }
 

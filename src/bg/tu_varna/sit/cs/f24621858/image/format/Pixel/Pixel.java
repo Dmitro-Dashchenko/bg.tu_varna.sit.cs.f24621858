@@ -1,11 +1,17 @@
 package bg.tu_varna.sit.cs.f24621858.image.format.Pixel;
 
 /**
- * Common interface for all pixel types used in Netpbm images.
+ * Common contract for every pixel type used across the Netpbm image family.
  *
- * <p>Every concrete pixel class must be able to serialise itself into an
- * {@code int[]} array so that generic I/O and transformation code can work
- * uniformly across PBM, PGM and PPM images.
+ * <p>The Netpbm standard defines three image types that differ in their colour
+ * model and therefore in the number of channels per pixel:
+ * <p>Implementing classes are expected to be <em>value objects</em>: two
+ * instances that carry identical channel data should be considered equal.
+ *
+ * @author Dmitro Dashchenko
+ *
+ * @see MonoChannelPixel
+ * @see RGBPixel
  */
 public interface Pixel {
 

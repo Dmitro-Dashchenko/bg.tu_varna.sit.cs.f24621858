@@ -36,7 +36,7 @@ public class CommandParser {
     private final Map<String,Command> commands;
 
     /**
-     * Constructs a {@code CommandParser} and initialises all command instances.
+     * Constructs a {@code CommandParser}.
      *
      * @param sessionManager the application-wide session manager shared by all
      *                       commands; must not be {@code null}
@@ -47,6 +47,11 @@ public class CommandParser {
         commands = fillCommandMap();
     }
 
+
+    /**
+     * Constructs and fulfills a {@code Map<String, Command>} and initialises all command instances.
+     *
+     */
     private Map<String, Command> fillCommandMap(){
         Map<String, Command> commandMap = new HashMap<>();
 

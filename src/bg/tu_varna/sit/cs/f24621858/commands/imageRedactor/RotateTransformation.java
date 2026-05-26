@@ -46,7 +46,7 @@ public class RotateTransformation implements Transformation {
      *
      * <p>Creates a new {@link NetpbmFormatImage} with swapped dimensions
      * and delegates the actual pixel mapping to
-     * {@link #setRotation(NetpbmFormatImage)}.
+     * {@link #setRotation(NetpbmFormatImage, int , int )}.
      *
      * @param image the source image; must not be {@code null}
      * @return a new image rotated 90° in the configured direction;

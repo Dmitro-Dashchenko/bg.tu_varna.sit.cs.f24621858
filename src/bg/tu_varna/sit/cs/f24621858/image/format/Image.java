@@ -4,7 +4,6 @@ import bg.tu_varna.sit.cs.f24621858.image.exceptions.InvalidImageDataException;
 import bg.tu_varna.sit.cs.f24621858.image.format.Pixel.Pixel;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -33,15 +32,6 @@ public abstract class Image {
 
     /** Height of the image in pixels. */
     protected int height;
-
-    /**Channels of the image*/
-    /*protected int channels;*/
-
-    /**
-     * Three-dimensional pixel data array laid out as
-     * {@code [height][width][channels]}.
-     */
-    /*protected int[][][] pixels;*/
 
     protected List<Pixel> pixels;
 

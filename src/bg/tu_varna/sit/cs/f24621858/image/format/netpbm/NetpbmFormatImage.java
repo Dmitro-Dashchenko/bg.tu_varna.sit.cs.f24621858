@@ -10,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -64,25 +63,6 @@ public abstract class NetpbmFormatImage extends Image /*implements Cloneable*/{
         else
             setMaxPixelValue(this.magicWord, maxPixelValue);*/
     }
-
-    /**
-     * Sets {@code maxPixelValue} according to format rules:
-     * PBM images always have a maximum of {@code 1}; all others use the
-     * supplied value.
-     *
-     * @param magicWord     format variant
-     * @param maxPixelValue candidate value from the file header
-     */
-    /*protected void setMaxPixelValue(MagicWord magicWord, int maxPixelValue){
-        switch(magicWord){
-            case P1,P4:
-                this.maxPixelValue = 1;
-                break;
-            default:
-                this.maxPixelValue = maxPixelValue;
-                break;
-        }
-    }*/
 
     /**
      * Returns the format variant (magic word) of this image.

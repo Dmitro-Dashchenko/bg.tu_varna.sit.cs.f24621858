@@ -7,8 +7,6 @@ import bg.tu_varna.sit.cs.f24621858.image.format.netpbm.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static bg.tu_varna.sit.cs.f24621858.image.format.netpbm.MagicWord.P3;
-
 /**
  * Produces the colour-inverted (negative) version of an image.
  *
